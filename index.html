@@ -3,182 +3,320 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>生日快乐</title>
-<meta name="theme-color" content="#2a1d17">
+<title>Happy Birthday</title>
+<meta name="theme-color" content="#fbf8f4">
 <meta name="description" content="2003.10.15，一个不可思议的日子。">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎂</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌷</text></svg>">
+<link rel="preload" href="fonts/latin/cormorant-garamond-latin-300-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/latin/pinyon-script-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body data-scene="gate" class="locked">
+<body class="is-locked">
 
-<div id="bg"></div>
-<canvas id="sky" aria-hidden="true"></canvas>
+<!-- ============ 背景：珍珠白 + 流动的虹彩光 + 纸纹 ============ -->
+<div class="bg" aria-hidden="true">
+  <div class="aura a1"></div><div class="aura a2"></div><div class="aura a3"></div><div class="aura a4"></div>
+  <div class="grain"></div>
+</div>
+<canvas id="glitter" aria-hidden="true"></canvas>
 
-<!-- 开场：一束花（浏览器规定需要点一下才能出声音，所以点花束开始） -->
+<!-- ============ 第一页：花束 ============ -->
 <div id="gate">
-  <div class="gate-inner">
-    <p class="gate-to">To <span data-bind="herName"></span></p>
-    <button id="gate-btn" type="button" aria-label="打开">
-      <div id="bouquet"></div>
-    </button>
-    <p class="gate-sub">轻触花束 · 打开你的生日信<br><small>建议戴上耳机，慢慢往下滑</small></p>
+  <div class="gate__head">
+    <p class="eyebrow gate__date">2003 · 10 · 15</p>
+    <h1 class="gate__title"><span class="script">For</span><span class="gate__name" data-bind="herName"></span></h1>
+  </div>
+  <button id="gate-btn" type="button" aria-label="打开生日信">
+    <div id="bouquet"></div>
+  </button>
+  <div class="gate__foot">
+    <p class="gate__cta"><i></i><span>轻触花束 · 开启</span><i></i></p>
+    <p class="gate__tip">建议佩戴耳机，慢慢往下滑</p>
   </div>
 </div>
 
-<div id="progress"><i></i></div>
-<button id="sound" type="button" aria-label="静音 / 取消静音">
-  <span class="eq"><i></i><i></i><i></i><i></i></span>
-  <span class="np" id="now-playing"></span>
-</button>
-<nav id="dots" aria-label="章节"></nav>
+<!-- ============ 界面 ============ -->
+<header class="hud">
+  <div class="chapter" id="chapter" aria-live="polite"><span class="chapter__num"></span><span class="chapter__name"></span></div>
+  <button class="sound" id="sound" type="button" aria-label="静音 / 取消静音"><span class="bars"><i></i><i></i><i></i><i></i></span></button>
+</header>
+<div class="progress" aria-hidden="true"><i></i></div>
+<div class="toast" id="toast" aria-live="polite"><span class="toast__label">Now Playing</span><span class="toast__title"></span></div>
 
-<main>
+<main id="story">
 
   <!-- 序 -->
-  <section class="scene" id="prologue" data-title="序" data-track="xinli" data-fx="haze">
-    <div class="center">
-      <p class="reveal">2003 年的秋天，</p>
-      <p class="reveal d1">世界照常运转。</p>
-      <p class="reveal d2 big">但宇宙，悄悄准备了一件<br><em>不可思议</em>的事。</p>
-      <div class="scroll-hint reveal d3"><span></span>往下滑</div>
+  <section class="scene" id="prologue" data-num="Prologue" data-name="序" data-track="xinli" data-fx="haze" data-tint="pearl">
+    <div class="stage">
+      <p class="eyebrow">Prologue</p>
+      <div class="prologue__lines">
+        <p class="pl pl1">2003 年，秋。</p>
+        <p class="pl pl2">世界照常运转，</p>
+        <p class="pl pl3">但宇宙正悄悄准备</p>
+        <p class="pl pl4">一件<span class="foil">不可思议</span>的事。</p>
+      </div>
+      <div class="scroll-cue"><span>Scroll</span><i></i></div>
     </div>
   </section>
 
-  <!-- 2003.10.15 那一天 -->
-  <section class="scene sticky-scene" id="launch" data-title="那一天" data-track="bukesiyi" data-fx="clear" style="--h:380vh">
-    <div class="sticky">
-      <div class="date-stamp"><b>2003</b><span>10 · 15</span></div>
+  <!-- I 那一天 -->
+  <section class="scene" id="day" data-num="I" data-name="那一天" data-track="bukesiyi" data-fx="clear" data-tint="sky">
+    <div class="stage">
+      <div class="date">
+        <span class="date__year">2003</span>
+        <span class="date__md foil">10.15</span>
+      </div>
 
-      <div class="beat" data-from="0" data-to="0.34">
-        <div class="rocket-wrap">
-          <svg class="rocket" viewBox="0 0 60 160" aria-hidden="true">
+      <!-- 神舟五号 -->
+      <div class="panel panel--launch">
+        <div class="art">
+          <svg class="launch-art" viewBox="0 0 400 520" aria-hidden="true">
             <defs>
-              <linearGradient id="flame" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#fff3c4"/><stop offset=".4" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5e3a" stop-opacity="0"/>
+              <radialGradient id="earthFill" cx="50%" cy="0%" r="60%">
+                <stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#eef6fc"/><stop offset="1" stop-color="#dcebf7"/>
+              </radialGradient>
+              <linearGradient id="flameGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fffdf5"/><stop offset=".35" stop-color="#ffe2a8"/><stop offset=".7" stop-color="#f5b6c4" stop-opacity=".6"/><stop offset="1" stop-color="#f5b6c4" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient id="goldLine" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#a47a3f"/><stop offset=".5" stop-color="#dcbf86"/><stop offset="1" stop-color="#9c7439"/>
               </linearGradient>
             </defs>
-            <path class="flame" d="M22 108 Q30 160 38 108 Z" fill="url(#flame)"/>
-            <path d="M30 4 C44 22 46 50 44 104 L16 104 C14 50 16 22 30 4 Z" fill="#f4f1ea"/>
-            <path d="M16 78 L4 108 L16 102 Z M44 78 L56 108 L44 102 Z" fill="#d94b4b"/>
-            <circle cx="30" cy="44" r="7" fill="#1b2a5e" stroke="#9ad7ff" stroke-width="2"/>
-            <rect x="24" y="64" width="12" height="3" fill="#d94b4b"/>
+            <circle class="atmo" cx="200" cy="1320" r="878" fill="none" stroke="#cfe3f3" stroke-width="26" opacity=".55"/>
+            <circle class="earth" cx="200" cy="1320" r="860" fill="url(#earthFill)"/>
+            <path class="earth-line" d="M-40 494 A 860 860 0 0 1 440 494" fill="none" stroke="url(#goldLine)" stroke-width="1.2"/>
+            <path class="orbit" id="orbit-path" d="M-20 352 A 968 968 0 0 1 420 352" fill="none" stroke="url(#goldLine)" stroke-width="1" stroke-dasharray="2 5"/>
+            <g class="gantry" stroke="url(#goldLine)" stroke-width="1" fill="none">
+              <path d="M136 462 V272 M154 462 V272 M136 272 H154"/>
+              <path d="M136 290 L154 310 L136 330 L154 350 L136 370 L154 390 L136 410 L154 430 L136 450"/>
+              <path d="M154 300 H186 M154 360 H172"/>
+            </g>
+            <g class="rocket" id="rocket">
+              <g class="flame" id="flame">
+                <path d="M192 456 Q200 540 208 456 Z" fill="url(#flameGrad)"/>
+                <path d="M174 456 Q179 500 184 456 Z" fill="url(#flameGrad)"/>
+                <path d="M216 456 Q221 500 226 456 Z" fill="url(#flameGrad)"/>
+              </g>
+              <g class="rocket__body" fill="#fffdfa" stroke="url(#goldLine)" stroke-width="1.2" stroke-linejoin="round">
+                <path d="M190 456 V322 H210 V456 Z"/>
+                <path d="M186 322 V282 Q186 262 200 250 Q214 262 214 282 V322 Z"/>
+                <path d="M172 456 V372 Q172 352 179 342 Q186 352 186 372 V456 Z"/>
+                <path d="M214 456 V372 Q214 352 221 342 Q228 352 228 372 V456 Z"/>
+                <path d="M172 440 L164 460 L172 456 M228 440 L236 460 L228 456" fill="none"/>
+                <path d="M200 250 V224 M196 240 L200 226 L204 240" fill="none"/>
+                <path d="M186 300 H214 M190 344 H210 M190 410 H210" fill="none"/>
+              </g>
+              <rect x="195" y="360" width="10" height="7" fill="#e7a3b4"/>
+            </g>
+            <g class="orbit-dot" id="orbit-dot">
+              <circle r="7" fill="#fff6dc" opacity=".6"/>
+              <path d="M0 -9 L1.6 -1.6 L9 0 L1.6 1.6 L0 9 L-1.6 1.6 L-9 0 L-1.6 -1.6 Z" fill="#c9a15a"/>
+            </g>
           </svg>
-          <div class="trail"></div>
         </div>
-        <div class="beat-text">
-          <p class="kicker">上午 9:00 · 酒泉</p>
-          <h2>神舟五号点火升空</h2>
-          <p>杨利伟成为第一个进入太空的中国人。<br>那一天，中国人第一次飞向了星辰。</p>
+        <div class="panel__text">
+          <p class="kicker">09:00 · 酒泉</p>
+          <h2 class="h2 split">神舟五号，飞向星辰</h2>
+          <p class="body">这一天，杨利伟乘神舟五号进入太空，<br>成为第一位飞天的中国航天员。</p>
+          <p class="note">绕地球 14 圈 · 飞行 21 小时</p>
         </div>
       </div>
 
-      <div class="beat" data-from="0.34" data-to="0.67">
-        <div class="disc" aria-hidden="true"><div class="disc-label">不可思议<small>2003</small></div></div>
-        <div class="beat-text">
+      <!-- 《不可思议》 -->
+      <div class="panel panel--album">
+        <div class="art">
+          <div class="album">
+            <div class="cd"><div class="cd__holo"></div><div class="cd__shine"></div><div class="cd__ring"></div></div>
+            <div class="sleeve">
+              <span class="sleeve__t">不可思议</span>
+              <span class="sleeve__line"></span>
+              <span class="sleeve__s">2003 · 10 · 15</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel__text">
           <p class="kicker">同一天</p>
-          <h2>《不可思议》发行</h2>
-          <p>王力宏的新专辑来到这个世界，<br>好像专门为这一天取好了名字。</p>
+          <h2 class="h2 split">《不可思议》</h2>
+          <p class="body">王力宏发行了新专辑，<br>好像专门为这一天，取好了名字。</p>
         </div>
       </div>
 
-      <div class="beat" data-from="0.67" data-to="1.01">
-        <div class="falling-star" aria-hidden="true"></div>
-        <div class="beat-text">
-          <p class="kicker">而在 <span data-bind="birthCity"></span></p>
-          <h2>你出生了</h2>
-          <p>天上的人去看星星，<br>海口把最亮的那一颗，送到了人间。</p>
+      <!-- 海口 -->
+      <div class="panel panel--birth">
+        <div class="art">
+          <svg class="sea-art" viewBox="0 0 400 300" aria-hidden="true">
+            <defs>
+              <radialGradient id="birthGlow">
+                <stop offset="0" stop-color="#fffdf5"/><stop offset=".25" stop-color="#ffeec4" stop-opacity=".9"/>
+                <stop offset=".6" stop-color="#f8c8d4" stop-opacity=".35"/><stop offset="1" stop-color="#f8c8d4" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <circle class="birth-glow" cx="200" cy="200" r="150" fill="url(#birthGlow)"/>
+            <path class="horizon" d="M10 200 H390" stroke="url(#goldLine)" stroke-width="1.2"/>
+            <g class="waves" fill="none" stroke="url(#goldLine)">
+              <path class="wv" d="M-100 222 q25 -7 50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0" stroke-width="1" opacity=".8"/>
+              <path class="wv" d="M-100 244 q25 -6 50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0" stroke-width=".9" opacity=".55"/>
+              <path class="wv" d="M-100 266 q25 -5 50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0" stroke-width=".8" opacity=".35"/>
+            </g>
+            <path id="star-path" d="M372 -20 C 330 50, 250 110, 200 192" fill="none"/>
+            <g class="birth-star" id="birth-star">
+              <circle r="16" fill="url(#birthGlow)"/>
+              <path d="M0 -14 L2.4 -2.4 L14 0 L2.4 2.4 L0 14 L-2.4 2.4 L-14 0 L-2.4 -2.4 Z" fill="#fff" stroke="#d8b474" stroke-width=".8"/>
+            </g>
+          </svg>
+          <p class="coords">20°02′ N · 110°20′ E</p>
+        </div>
+        <div class="panel__text">
+          <p class="kicker">同一天 · 海口</p>
+          <h2 class="h2 split">而你，来到了这个世界</h2>
+          <p class="body">天上的人去看星星，<br>海口把最亮的那一颗，送到了人间。</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 海口 -->
-  <section class="scene" id="haikou" data-title="海口" data-track="xinli" data-fx="warm">
-    <div class="center">
-      <p class="kicker reveal">海口 · 北纬 20°</p>
-      <p class="reveal d1 big">椰风，海浪，阳光。</p>
-      <p class="reveal d2">你睁开眼睛的那一刻，<br>大概连海风都温柔了一点。</p>
-      <p class="reveal d3 counter">从那天起，你已经在这个星球上度过了<br><b data-days-lived>0</b> 天</p>
-    </div>
-    <svg class="waves" viewBox="0 0 1440 200" preserveAspectRatio="none" aria-hidden="true">
-      <path class="w1" d="M0 120 Q180 80 360 120 T720 120 T1080 120 T1440 120 V200 H0Z"/>
-      <path class="w2" d="M0 140 Q180 100 360 140 T720 140 T1080 140 T1440 140 V200 H0Z"/>
-      <path class="w3" d="M0 160 Q180 130 360 160 T720 160 T1080 160 T1440 160 V200 H0Z"/>
-    </svg>
-  </section>
-
-  <!-- 成长 -->
-  <section class="scene sticky-scene" id="growing" data-title="长大" data-track="xinli" data-fx="warm" style="--h:420vh">
-    <div class="sticky">
-      <p class="kicker">然后，你慢慢长大</p>
-      <div class="year" id="year">2003</div>
-      <div class="age" id="age">0 岁</div>
-      <div class="milestone" id="milestone"></div>
-      <div class="timeline"><i id="timeline-fill"></i><div id="timeline-dots"></div></div>
+  <!-- II 从那天起 -->
+  <section class="scene" id="days" data-num="II" data-name="从那天起" data-track="xinli" data-fx="warm" data-tint="sea">
+    <div class="stage">
+      <p class="eyebrow">Since that day</p>
+      <p class="days__lead split">从那天起，你已经在这颗星球上</p>
+      <div class="bignum"><span class="foil" id="days-num">0</span><span class="bignum__unit">天</span></div>
+      <div class="stats">
+        <div class="stat"><b id="hours-num">0</b><span>小时</span></div>
+        <div class="stat"><b id="moons-num">0</b><span>次满月</span></div>
+        <div class="stat"><b id="summers-num">0</b><span>个夏天</span></div>
+      </div>
+      <p class="days__tail">每一天，都在慢慢变成现在的你。</p>
     </div>
   </section>
 
-  <!-- 我们在一起 -->
-  <section class="scene" id="together" data-title="我们" data-track="xinli" data-fx="clear">
-    <div class="center head">
-      <p class="kicker reveal">后来</p>
-      <h2 class="reveal d1 big">我们遇见了。</h2>
-      <p class="reveal d2 counter">在一起的第 <b data-days-together>0</b> 天</p>
-    </div>
-    <div class="memories" id="memories"></div>
-  </section>
-
-  <!-- 争吵 -->
-  <section class="scene sticky-scene" id="quarrel" data-title="争吵" data-track="nibuzai" data-fx="distant" data-fx-end="warm" style="--h:340vh">
-    <div class="sticky">
-      <div class="quarrel-lines" id="quarrel-lines"></div>
-      <div class="resolve-lines" id="resolve-lines"></div>
+  <!-- III 长大 -->
+  <section class="scene" id="grow" data-num="III" data-name="长大" data-track="xinli" data-fx="warm" data-tint="blossom">
+    <div class="stage">
+      <p class="eyebrow">Growing up</p>
+      <div class="odo" id="odo" aria-label="年份"></div>
+      <p class="age"><span id="age-now">0</span> 岁</p>
+      <div class="stack" id="stack"></div>
+      <div class="rail"><i id="rail-fill"></i><div class="rail__dots" id="rail-dots"></div></div>
     </div>
   </section>
 
-  <!-- 彼此相爱 -->
-  <section class="scene" id="love" data-title="相爱" data-track="love" data-fx="clear">
-    <div class="center">
-      <p class="kicker reveal">雨停了</p>
-      <h2 class="reveal d1 huge">我们一直<br>彼此相爱。</h2>
-      <p class="reveal d2">爱，无所不在——</p>
-      <ul class="everywhere">
-        <li class="reveal d2">在每一句晚安里，</li>
-        <li class="reveal d3">在每一次牵手里，</li>
-        <li class="reveal d4">在吵完架后那个先伸过来的拥抱里，</li>
-        <li class="reveal d5">在我想起你就会笑的每一个瞬间里。</li>
-      </ul>
+  <!-- IV 遇见 -->
+  <section class="scene" id="us" data-num="IV" data-name="遇见" data-track="xinli" data-fx="clear" data-tint="rose">
+    <div class="us-intro">
+      <p class="eyebrow">And then</p>
+      <h2 class="display split">后来，我们遇见了。</h2>
+      <p class="us-date" id="us-date"></p>
+      <p class="us-count">在一起的第 <b class="foil" id="together-num">0</b> 天</p>
+    </div>
+    <div class="gallery">
+      <div class="track" id="track"></div>
     </div>
   </section>
 
-  <!-- 生日快乐 -->
-  <section class="scene" id="birthday" data-title="生日快乐" data-track="love" data-fx="warm">
-    <div class="center">
-      <p class="kicker reveal"><span data-bind="herName"></span>，</p>
-      <h2 class="reveal d1 huge gold"><span id="age-num">23</span> 岁生日快乐</h2>
+  <!-- V 争吵 -->
+  <section class="scene" id="storm" data-num="V" data-name="争吵" data-track="nibuzai" data-fx="distant" data-fx-end="warm" data-tint="storm">
+    <div class="stage">
+      <p class="eyebrow">Storms</p>
+      <div class="storm-lines" id="storm-lines"></div>
+      <div class="dawn" aria-hidden="true"></div>
+      <div class="resolve" id="resolve-lines"></div>
+    </div>
+  </section>
 
-      <button class="cake reveal d2" id="cake" type="button" aria-label="吹灭蜡烛">
-        <div class="candles" id="candles"></div>
-        <div class="tier t1"><i class="drip"></i></div>
-        <div class="tier t2"><i class="drip"></i></div>
-        <div class="plate"></div>
+  <!-- VI 相爱 -->
+  <section class="scene" id="love" data-num="VI" data-name="相爱" data-track="love" data-fx="clear" data-tint="blush">
+    <div class="stage">
+      <div class="love-text">
+        <h2 class="display split">我们一直，彼此相爱。</h2>
+        <p class="love-sub"><span class="script">love is everywhere</span>爱，无所不在</p>
+        <ul class="love-lines" id="love-lines"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- VII 生日快乐 -->
+  <section class="scene" id="bday" data-num="VII" data-name="生日快乐" data-track="love" data-fx="warm" data-tint="champagne">
+    <div class="stage bday-hero">
+      <svg class="hb" viewBox="0 0 600 170" aria-label="Happy Birthday">
+        <defs>
+          <linearGradient id="foilText" x1="0" y1="0" x2="1" y2=".3">
+            <stop offset="0" stop-color="#a0763a"/><stop offset=".25" stop-color="#e4c98f"/><stop offset=".45" stop-color="#fff5dc"/>
+            <stop offset=".6" stop-color="#c79c5c"/><stop offset=".85" stop-color="#ecd49e"/><stop offset="1" stop-color="#9c7338"/>
+          </linearGradient>
+        </defs>
+        <text class="hb__text" x="300" y="118" text-anchor="middle">Happy Birthday</text>
+      </svg>
+      <p class="bday-cn"><span data-bind="herName"></span>，<span id="age-num">23</span> 岁生日快乐</p>
+
+      <button class="cake" id="cake" type="button" aria-label="吹灭蜡烛">
+        <svg viewBox="0 0 300 300" aria-hidden="true">
+          <defs>
+            <linearGradient id="tier" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#efe7df"/><stop offset=".25" stop-color="#fffdfb"/><stop offset=".7" stop-color="#fbf6f1"/><stop offset="1" stop-color="#e6ddd3"/>
+            </linearGradient>
+            <radialGradient id="pearl" cx="35%" cy="35%" r="70%">
+              <stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#f3ece6"/><stop offset="1" stop-color="#d9cfc6"/>
+            </radialGradient>
+            <radialGradient id="flameG" cx="50%" cy="70%" r="60%">
+              <stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#fff1c2"/><stop offset=".75" stop-color="#ffb866"/><stop offset="1" stop-color="#ff9a5a" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="flameHalo"><stop offset="0" stop-color="#ffe7a8" stop-opacity=".7"/><stop offset="1" stop-color="#ffe7a8" stop-opacity="0"/></radialGradient>
+          </defs>
+          <ellipse cx="150" cy="268" rx="132" ry="18" fill="url(#pearl)" stroke="url(#goldLine)" stroke-width="1.2"/>
+          <!-- 下层 -->
+          <path d="M44 180 V252 Q150 280 256 252 V180 Z" fill="url(#tier)"/>
+          <ellipse cx="150" cy="180" rx="106" ry="18" fill="#fffdfb" stroke="#eee5da"/>
+          <path d="M44 236 Q150 262 256 236" fill="none" stroke="url(#goldLine)" stroke-width="1.4"/>
+          <path d="M44 196 Q60 214 78 198 Q96 218 114 200 Q132 220 150 201 Q168 220 186 200 Q204 218 222 198 Q240 214 256 196" fill="none" stroke="#f2b9c8" stroke-width="3" stroke-linecap="round"/>
+          <g class="pearls" fill="url(#pearl)"></g>
+          <!-- 上层 -->
+          <path d="M84 118 V172 Q150 190 216 172 V118 Z" fill="url(#tier)"/>
+          <ellipse cx="150" cy="118" rx="66" ry="12" fill="#fffdfb" stroke="#eee5da"/>
+          <path d="M84 160 Q150 178 216 160" fill="none" stroke="url(#goldLine)" stroke-width="1.2"/>
+          <g class="cake-flowers"></g>
+          <!-- 数字蜡烛 -->
+          <g class="candles" id="candles"></g>
+        </svg>
       </button>
-      <p class="hint reveal d3" id="cake-hint">闭上眼睛许个愿，然后点一下蜡烛</p>
-
-      <div class="letter" id="letter">
-        <div id="letter-body"></div>
-        <p class="sign">—— <span data-bind="myName"></span></p>
-        <button class="again" id="again" type="button">从头再看一遍</button>
-      </div>
+      <p class="hint" id="cake-hint">闭上眼睛许个愿，然后轻触蜡烛</p>
     </div>
+
+    <div class="letter-zone" id="letter-zone">
+      <button class="envelope" id="envelope" type="button" aria-label="拆开信封">
+        <span class="env__back"></span>
+        <span class="env__card"><span class="script">for you</span></span>
+        <span class="env__front"></span>
+        <span class="env__flap"></span>
+        <span class="env__seal">♡</span>
+      </button>
+      <p class="hint env-hint">轻触信封</p>
+      <article class="letter" id="letter">
+        <p class="letter__head script">May your day be filled with love, joy, and all things wonderful</p>
+        <div class="letter__body" id="letter-body"></div>
+        <p class="letter__sign"><span class="script">Forever yours,</span><span data-bind="myName"></span></p>
+      </article>
+    </div>
+
+    <footer class="finale">
+      <p class="script foil finale__t">Forever &amp; Always</p>
+      <button class="again" id="again" type="button">再看一遍</button>
+    </footer>
   </section>
 
 </main>
 
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+<script src="vendor/SplitText.min.js"></script>
+<script src="vendor/DrawSVGPlugin.min.js"></script>
+<script src="vendor/MotionPathPlugin.min.js"></script>
+<script src="vendor/lenis.min.js"></script>
 <script src="js/config.js"></script>
-<script src="js/bouquet.js"></script>
 <script src="js/audio.js"></script>
-<script src="js/sky.js"></script>
+<script src="js/glitter.js"></script>
+<script src="js/bouquet.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
