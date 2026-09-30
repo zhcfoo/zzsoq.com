@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>生日快乐</title>
+<meta name="theme-color" content="#2a1d17">
+<meta name="description" content="2003.10.15，一个不可思议的日子。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎂</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-scene="gate" class="locked">
+
+<div id="bg"></div>
+<canvas id="sky" aria-hidden="true"></canvas>
+
+<!-- 开场：一束花（浏览器规定需要点一下才能出声音，所以点花束开始） -->
+<div id="gate">
+  <div class="gate-inner">
+    <p class="gate-to">To <span data-bind="herName"></span></p>
+    <button id="gate-btn" type="button" aria-label="打开">
+      <div id="bouquet"></div>
+    </button>
+    <p class="gate-sub">轻触花束 · 打开你的生日信<br><small>建议戴上耳机，慢慢往下滑</small></p>
+  </div>
+</div>
+
+<div id="progress"><i></i></div>
+<button id="sound" type="button" aria-label="静音 / 取消静音">
+  <span class="eq"><i></i><i></i><i></i><i></i></span>
+  <span class="np" id="now-playing"></span>
+</button>
+<nav id="dots" aria-label="章节"></nav>
+
+<main>
+
+  <!-- 序 -->
+  <section class="scene" id="prologue" data-title="序" data-track="xinli" data-fx="haze">
+    <div class="center">
+      <p class="reveal">2003 年的秋天，</p>
+      <p class="reveal d1">世界照常运转。</p>
+      <p class="reveal d2 big">但宇宙，悄悄准备了一件<br><em>不可思议</em>的事。</p>
+      <div class="scroll-hint reveal d3"><span></span>往下滑</div>
+    </div>
+  </section>
+
+  <!-- 2003.10.15 那一天 -->
+  <section class="scene sticky-scene" id="launch" data-title="那一天" data-track="bukesiyi" data-fx="clear" style="--h:380vh">
+    <div class="sticky">
+      <div class="date-stamp"><b>2003</b><span>10 · 15</span></div>
+
+      <div class="beat" data-from="0" data-to="0.34">
+        <div class="rocket-wrap">
+          <svg class="rocket" viewBox="0 0 60 160" aria-hidden="true">
+            <defs>
+              <linearGradient id="flame" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fff3c4"/><stop offset=".4" stop-color="#ffb347"/><stop offset="1" stop-color="#ff5e3a" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path class="flame" d="M22 108 Q30 160 38 108 Z" fill="url(#flame)"/>
+            <path d="M30 4 C44 22 46 50 44 104 L16 104 C14 50 16 22 30 4 Z" fill="#f4f1ea"/>
+            <path d="M16 78 L4 108 L16 102 Z M44 78 L56 108 L44 102 Z" fill="#d94b4b"/>
+            <circle cx="30" cy="44" r="7" fill="#1b2a5e" stroke="#9ad7ff" stroke-width="2"/>
+            <rect x="24" y="64" width="12" height="3" fill="#d94b4b"/>
+          </svg>
+          <div class="trail"></div>
+        </div>
+        <div class="beat-text">
+          <p class="kicker">上午 9:00 · 酒泉</p>
+          <h2>神舟五号点火升空</h2>
+          <p>杨利伟成为第一个进入太空的中国人。<br>那一天，中国人第一次飞向了星辰。</p>
+        </div>
+      </div>
+
+      <div class="beat" data-from="0.34" data-to="0.67">
+        <div class="disc" aria-hidden="true"><div class="disc-label">不可思议<small>2003</small></div></div>
+        <div class="beat-text">
+          <p class="kicker">同一天</p>
+          <h2>《不可思议》发行</h2>
+          <p>王力宏的新专辑来到这个世界，<br>好像专门为这一天取好了名字。</p>
+        </div>
+      </div>
+
+      <div class="beat" data-from="0.67" data-to="1.01">
+        <div class="falling-star" aria-hidden="true"></div>
+        <div class="beat-text">
+          <p class="kicker">而在 <span data-bind="birthCity"></span></p>
+          <h2>你出生了</h2>
+          <p>天上的人去看星星，<br>海口把最亮的那一颗，送到了人间。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 海口 -->
+  <section class="scene" id="haikou" data-title="海口" data-track="xinli" data-fx="warm">
+    <div class="center">
+      <p class="kicker reveal">海口 · 北纬 20°</p>
+      <p class="reveal d1 big">椰风，海浪，阳光。</p>
+      <p class="reveal d2">你睁开眼睛的那一刻，<br>大概连海风都温柔了一点。</p>
+      <p class="reveal d3 counter">从那天起，你已经在这个星球上度过了<br><b data-days-lived>0</b> 天</p>
+    </div>
+    <svg class="waves" viewBox="0 0 1440 200" preserveAspectRatio="none" aria-hidden="true">
+      <path class="w1" d="M0 120 Q180 80 360 120 T720 120 T1080 120 T1440 120 V200 H0Z"/>
+      <path class="w2" d="M0 140 Q180 100 360 140 T720 140 T1080 140 T1440 140 V200 H0Z"/>
+      <path class="w3" d="M0 160 Q180 130 360 160 T720 160 T1080 160 T1440 160 V200 H0Z"/>
+    </svg>
+  </section>
+
+  <!-- 成长 -->
+  <section class="scene sticky-scene" id="growing" data-title="长大" data-track="xinli" data-fx="warm" style="--h:420vh">
+    <div class="sticky">
+      <p class="kicker">然后，你慢慢长大</p>
+      <div class="year" id="year">2003</div>
+      <div class="age" id="age">0 岁</div>
+      <div class="milestone" id="milestone"></div>
+      <div class="timeline"><i id="timeline-fill"></i><div id="timeline-dots"></div></div>
+    </div>
+  </section>
+
+  <!-- 我们在一起 -->
+  <section class="scene" id="together" data-title="我们" data-track="xinli" data-fx="clear">
+    <div class="center head">
+      <p class="kicker reveal">后来</p>
+      <h2 class="reveal d1 big">我们遇见了。</h2>
+      <p class="reveal d2 counter">在一起的第 <b data-days-together>0</b> 天</p>
+    </div>
+    <div class="memories" id="memories"></div>
+  </section>
+
+  <!-- 争吵 -->
+  <section class="scene sticky-scene" id="quarrel" data-title="争吵" data-track="nibuzai" data-fx="distant" data-fx-end="warm" style="--h:340vh">
+    <div class="sticky">
+      <div class="quarrel-lines" id="quarrel-lines"></div>
+      <div class="resolve-lines" id="resolve-lines"></div>
+    </div>
+  </section>
+
+  <!-- 彼此相爱 -->
+  <section class="scene" id="love" data-title="相爱" data-track="love" data-fx="clear">
+    <div class="center">
+      <p class="kicker reveal">雨停了</p>
+      <h2 class="reveal d1 huge">我们一直<br>彼此相爱。</h2>
+      <p class="reveal d2">爱，无所不在——</p>
+      <ul class="everywhere">
+        <li class="reveal d2">在每一句晚安里，</li>
+        <li class="reveal d3">在每一次牵手里，</li>
+        <li class="reveal d4">在吵完架后那个先伸过来的拥抱里，</li>
+        <li class="reveal d5">在我想起你就会笑的每一个瞬间里。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 生日快乐 -->
+  <section class="scene" id="birthday" data-title="生日快乐" data-track="love" data-fx="warm">
+    <div class="center">
+      <p class="kicker reveal"><span data-bind="herName"></span>，</p>
+      <h2 class="reveal d1 huge gold"><span id="age-num">23</span> 岁生日快乐</h2>
+
+      <button class="cake reveal d2" id="cake" type="button" aria-label="吹灭蜡烛">
+        <div class="candles" id="candles"></div>
+        <div class="tier t1"><i class="drip"></i></div>
+        <div class="tier t2"><i class="drip"></i></div>
+        <div class="plate"></div>
+      </button>
+      <p class="hint reveal d3" id="cake-hint">闭上眼睛许个愿，然后点一下蜡烛</p>
+
+      <div class="letter" id="letter">
+        <div id="letter-body"></div>
+        <p class="sign">—— <span data-bind="myName"></span></p>
+        <button class="again" id="again" type="button">从头再看一遍</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="js/config.js"></script>
+<script src="js/bouquet.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/sky.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
