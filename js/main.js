@@ -281,9 +281,9 @@
     gsap.set('#orbit-dot, #birth-star', { autoAlpha: 0 });
     gsap.set('.birth-glow', { scale: .01, transformOrigin: '50% 50%' });
     gsap.set('.rocket__body path', { fillOpacity: 0 });
-    gsap.set('#flame', { scale: .01, svgOrigin: '200 456' }); // 不用 0：缩放为 0 时 SVG 变换原点无法还原
+    gsap.set('#flame', { scale: .01, transformOrigin: '50% 0%' }); // 不用 0：缩放为 0 时 SVG 变换原点无法还原
     // 火焰抖动用 GSAP 做（手机 Safari 对 SVG 上的 CSS 变换原点支持不一致，会让火焰跑偏）
-    gsap.to('#flame-flicker', { scaleX: .92, scaleY: 1.12, svgOrigin: '200 456', duration: .12, ease: 'sine.inOut', repeat: -1, yoyo: true });
+    gsap.to('#flame-flicker', { scaleX: .92, scaleY: 1.12, transformOrigin: '50% 0%', duration: .12, ease: 'sine.inOut', repeat: -1, yoyo: true });
 
     const textIn = (panel, at, tl) => {
       tl.from($('.kicker', panel), { autoAlpha: 0, y: 16, duration: .5 }, at)
@@ -471,7 +471,7 @@
   // ---------- VII 生日 ----------
   {
     gsap.set('.candle-fire', { autoAlpha: 0, y: 6 });
-    $$('.candle-flame').forEach((f, i) => gsap.to(f, { scaleX: .9, scaleY: 1.1, rotation: 2, svgOrigin: f.dataset.o, duration: .16 + i * .03, ease: 'sine.inOut', repeat: -1, yoyo: true }));
+    $$('.candle-flame').forEach((f, i) => gsap.to(f, { scaleX: .9, scaleY: 1.1, rotation: 2, transformOrigin: '50% 90%', duration: .16 + i * .03, ease: 'sine.inOut', repeat: -1, yoyo: true }));
     const tl = pinTl('.bday-hero', 170);
     tl.to('.hb__text', { strokeDashoffset: 0, duration: 2.2, ease: 'power1.inOut' })
       .to('.hb__text', { fillOpacity: 1, strokeOpacity: .25, duration: .9 }, 1.6)
