@@ -90,12 +90,12 @@
   ].map(([h, x, y, s, rot]) => `<use href="${h}" transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"/>`).join('');
   const digits = String(age).split('');
   $('#candles').innerHTML = digits.map((d, i) => {
-    const x = 150 + (i - (digits.length - 1) / 2) * 46, base = 112, y0 = base - 62;
+    const x = 150 + (i - (digits.length - 1) / 2) * 46, base = 116, y0 = base - 56; // 数字用等高数字，字高约 44
     return `<g class="candle">
       <path d="M${x} ${y0 + 2} V${y0 + 12}" stroke="#6b5040" stroke-width="1.4"/>
-      <g class="candle-fire"><circle cx="${x}" cy="${y0 - 6}" r="18" fill="url(#flameHalo)"/>
-      <path class="candle-flame" d="M${x} ${y0 - 22} C${x + 7} ${y0 - 10} ${x + 8} ${y0 - 2} ${x} ${y0 + 4} C${x - 8} ${y0 - 2} ${x - 7} ${y0 - 10} ${x} ${y0 - 22}Z" fill="url(#flameG)"/></g>
-      <text x="${x}" y="${base}" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-weight="500" font-size="70" fill="url(#foilText)" stroke="#a47b3f" stroke-width=".6">${d}</text>
+      <g class="candle-fire" data-o="${x} ${y0 + 4}"><circle cx="${x}" cy="${y0 - 6}" r="18" fill="url(#flameHalo)"/>
+      <path class="candle-flame" data-o="${x} ${y0 + 4}" d="M${x} ${y0 - 22} C${x + 7} ${y0 - 10} ${x + 8} ${y0 - 2} ${x} ${y0 + 4} C${x - 8} ${y0 - 2} ${x - 7} ${y0 - 10} ${x} ${y0 - 22}Z" fill="url(#flameG)"/></g>
+      <text x="${x}" y="${base}" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-weight="500" font-size="70" style="font-variant-numeric: lining-nums" fill="url(#foilText)" stroke="#a47b3f" stroke-width=".6">${d}</text>
     </g>`;
   }).join('');
 
@@ -279,9 +279,11 @@
     const pA = $('.panel--launch'), pB = $('.panel--album'), pC = $('.panel--birth');
     gsap.set([pA, pB, pC], { autoAlpha: 0 });
     gsap.set('#orbit-dot, #birth-star', { autoAlpha: 0 });
-    gsap.set('.birth-glow', { scale: 0, transformOrigin: '50% 50%' });
+    gsap.set('.birth-glow', { scale: .01, transformOrigin: '50% 50%' });
     gsap.set('.rocket__body path', { fillOpacity: 0 });
-    gsap.set('#flame', { scale: 0, transformOrigin: '50% 0%' });
+    gsap.set('#flame', { scale: .01, svgOrigin: '200 456' }); // 不用 0：缩放为 0 时 SVG 变换原点无法还原
+    // 火焰抖动用 GSAP 做（手机 Safari 对 SVG 上的 CSS 变换原点支持不一致，会让火焰跑偏）
+    gsap.to('#flame-flicker', { scaleX: .92, scaleY: 1.12, svgOrigin: '200 456', duration: .12, ease: 'sine.inOut', repeat: -1, yoyo: true });
 
     const textIn = (panel, at, tl) => {
       tl.from($('.kicker', panel), { autoAlpha: 0, y: 16, duration: .5 }, at)
@@ -378,7 +380,7 @@
       const at = Math.max(.2, ((growth[i].year - 2003) / span) * 10 - .7);
       tl.from(p, { x: () => innerWidth * .75, y: 60, rotation: rand(14, 24), autoAlpha: 0, duration: .9, ease: 'power3.out' }, at);
       cue(tl, 'shutter', at);
-      for (let k = 0; k < i; k++) tl.to(pols[k], { y: '-=9', scale: '-=.035', filter: `brightness(${1 - (i - k) * .03})`, duration: .6 }, at + .2);
+      for (let k = 0; k < i; k++) tl.to(pols[k], { y: '-=9', scale: '-=.035', '--dim': ((i - k) * .035).toFixed(3), duration: .6 }, at + .2);
     });
     tl.to({}, { duration: .8 });
   }
@@ -468,13 +470,14 @@
 
   // ---------- VII 生日 ----------
   {
-    gsap.set('.candle-fire', { scale: 0, transformOrigin: '50% 100%' });
+    gsap.set('.candle-fire', { autoAlpha: 0, y: 6 });
+    $$('.candle-flame').forEach((f, i) => gsap.to(f, { scaleX: .9, scaleY: 1.1, rotation: 2, svgOrigin: f.dataset.o, duration: .16 + i * .03, ease: 'sine.inOut', repeat: -1, yoyo: true }));
     const tl = pinTl('.bday-hero', 170);
     tl.to('.hb__text', { strokeDashoffset: 0, duration: 2.2, ease: 'power1.inOut' })
       .to('.hb__text', { fillOpacity: 1, strokeOpacity: .25, duration: .9 }, 1.6)
       .from(chars('.bday-cn'), { ...charIn, stagger: .05, duration: .5 }, 1.9)
       .from('.cake', { autoAlpha: 0, y: 70, scale: .88, duration: 1, ease: 'power3.out' }, 2.3)
-      .to('.candle-fire', { scale: 1, stagger: .2, duration: .5, ease: 'back.out(2)' }, 3.1)
+      .to('.candle-fire', { autoAlpha: 1, y: 0, stagger: .2, duration: .5, ease: 'power2.out' }, 3.1)
       .from('#cake-hint', { autoAlpha: 0, y: 10, duration: .5 }, 3.4)
       .to({}, { duration: .6 });
     cue(tl, 'ignite', 3.1); cue(tl, 'ignite', 3.3);
@@ -484,7 +487,7 @@
     cake.addEventListener('click', () => {
       if (blown) return;
       blown = true;
-      gsap.to('.candle-fire', { scale: 0, autoAlpha: 0, duration: .4, stagger: .1, ease: 'power2.in' });
+      gsap.to('.candle-fire', { autoAlpha: 0, y: -8, duration: .4, stagger: .1, ease: 'power2.in' });
       smoke();
       const r = cake.getBoundingClientRect();
       const cx = r.left + r.width / 2, cy = r.top + r.height * .25;
@@ -513,7 +516,7 @@
         }
       });
     }
-    cake.resetCandles = () => { blown = false; gsap.to('.candle-fire', { scale: 1, autoAlpha: 1, duration: .5 }); $('#cake-hint').textContent = '闭上眼睛许个愿，然后轻触蜡烛'; };
+    cake.resetCandles = () => { blown = false; gsap.to('.candle-fire', { autoAlpha: 1, y: 0, duration: .5 }); $('#cake-hint').textContent = '闭上眼睛许个愿，然后轻触蜡烛'; };
 
     // 信封
     gsap.from('.envelope', { autoAlpha: 0, y: 80, rotation: -4, duration: 1.2, ease: 'power3.out', scrollTrigger: { trigger: '#letter-zone', start: 'top 70%', toggleActions: 'play none none reverse' } });
@@ -530,9 +533,10 @@
         .to('.env__seal', { scale: 0, autoAlpha: 0, duration: .35, ease: 'back.in(2)' })
         .call(() => G.burst(r.left + r.width / 2, r.top + r.height * .56, 50, 4))
         .call(() => bgm.sfx('paper'))
-        .to('.env__flap', { rotationX: 180, duration: .8, ease: 'power2.inOut' })
-        .set('.env__flap', { zIndex: 0 }, '-=.4')
-        .to('.env__card', { yPercent: -62, duration: .9, ease: 'power3.out' })
+        .to('.env__flap', { scaleY: 0, duration: .35, ease: 'power2.in', force3D: false })
+        .set('.env__flap', { zIndex: 1 })
+        .to('.env__flap', { scaleY: -1, duration: .45, ease: 'power2.out', force3D: false })
+        .to('.env__card', { yPercent: -62, duration: .9, ease: 'power3.out', force3D: false })
         .to('.env-hint', { autoAlpha: 0, duration: .3 }, '<')
         .to(env, { autoAlpha: 0, y: 40, scale: .96, duration: .6, ease: 'power2.in' }, '+=.2')
         .add(() => {
