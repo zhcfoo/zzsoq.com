@@ -169,6 +169,9 @@ body.is-muted .bars i { animation: none; transform: scaleY(.2); }
   box-shadow: 0 1px 0 #fff inset, 0 34px 60px -24px rgba(110, 80, 60, .38), 0 4px 10px -4px rgba(110, 80, 60, .15);
 }
 .sleeve::before { content: ""; position: absolute; inset: 7%; border: 1px solid var(--gold-soft); }
+.sleeve.has-cover { background-size: cover; background-position: center; }
+.sleeve.has-cover::before, .sleeve.has-cover > * { display: none; }
+.sleeve.has-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(125deg, rgba(255, 255, 255, .35), transparent 35%, transparent 70%, rgba(255, 255, 255, .18)); }
 .sleeve__t { font-weight: 300; font-size: clamp(18px, 2.4vw + 6px, 30px); letter-spacing: .5em; margin-right: -.5em; }
 .sleeve__line { width: 24%; height: 1px; background: var(--gold); opacity: .6; }
 .sleeve__s { font: italic 400 clamp(11px, .5vw + 9px, 14px)/1 var(--en); letter-spacing: .3em; color: var(--gold); }

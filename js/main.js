@@ -124,13 +124,27 @@
   const toast = $('#toast');
   let toastTl;
   bgm.onchange = (tr) => {
-    $('.toast__title', toast).textContent = tr.missing ? '氛围音乐' : `${tr.title} — ${tr.artist}`;
+    $('.toast__title', toast).textContent = tr.artist ? `${tr.title} — ${tr.artist}` : tr.title;
     toastTl && toastTl.kill();
     toastTl = gsap.timeline()
       .to(toast, { autoAlpha: 1, y: 0, duration: .8, ease: 'power3.out' })
       .to(toast, { autoAlpha: 0, y: 12, duration: .8, ease: 'power2.in' }, '+=3.2');
   };
   $('#sound').addEventListener('click', () => document.body.classList.toggle('is-muted', bgm.toggleMute()));
+  // 只在往下滑时触发的音效（时间轴来回拖动时不重复响）
+  const cue = (tl, name, at, o) => tl.call(() => { const st = tl.scrollTrigger; if (st && st.direction > 0 && st.isActive) bgm.sfx(name, o); }, null, at);
+  // 点屏幕：一颗随机的高音
+  let lastSpark = 0;
+  addEventListener('pointerdown', () => { const n = performance.now(); if (n - lastSpark > 140) { lastSpark = n; bgm.sfx('sparkle'); } }, { passive: true });
+  // 碎钻爱心跳动时，配上心跳声
+  G.state.onBeat = () => { if (active && (active.id === 'love' || active.id === 'storm')) bgm.sfx('heartbeat', { v: .55 }); };
+
+  // 专辑封面：photos/album.jpg 存在就换上
+  if (S.albumCover) {
+    const img = new Image();
+    img.onload = () => { const sl = $('.sleeve'); sl.style.backgroundImage = `url('${S.albumCover}')`; sl.classList.add('has-cover'); };
+    img.src = S.albumCover;
+  }
 
   /* =========================================================
    * 场景配色
@@ -161,7 +175,14 @@
   });
   function counter(el, to, from = 0) {
     const o = { v: from };
-    return { o, onUpdate: () => { el.textContent = fmt(o.v); } };
+    let last = 0, shown = '';
+    return { o, onUpdate: () => {
+      const txt = fmt(o.v);
+      el.textContent = txt;
+      const n = performance.now();
+      if (txt !== shown && n - last > 75) { last = n; bgm.sfx('tick'); }
+      shown = txt;
+    } };
   }
 
   /* =========================================================
@@ -200,6 +221,7 @@
     if (opened) return;
     opened = true;
     bgm.unlock();
+    bgm.sfx('open');
     introTl && introTl.progress(1).kill();
     gsap.killTweensOf('#bouquet');
     const box = $('#bouquet').getBoundingClientRect();
@@ -317,6 +339,9 @@
       .to('#birth-star', { autoAlpha: 0, scale: 2, duration: .5 }, 10.3)
       .from('.coords', { autoAlpha: 0, letterSpacing: '.8em', duration: .8 }, 10.4);
     textIn(pC, 10.5, tl);
+    cue(tl, 'rumble', 2.05); cue(tl, 'ping', 3.35); cue(tl, 'ping', 4.2);
+    cue(tl, 'whoosh', 5.1); cue(tl, 'shimmer', 5.9);
+    cue(tl, 'whoosh', 8.4); cue(tl, 'fall', 8.95); cue(tl, 'land', 10.2);
     tl.to({}, { duration: .8 });
     G.follow($('#flame'), { when: () => dayActive && rocketFlying, ox: .5, oy: .6, spread: 8, vy: .8, gravity: .02 });
     G.follow($('#birth-star'), { when: () => dayActive && starFalling, spread: 5, vy: .2 });
@@ -352,6 +377,7 @@
       if (i === 0) return;
       const at = Math.max(.2, ((growth[i].year - 2003) / span) * 10 - .7);
       tl.from(p, { x: () => innerWidth * .75, y: 60, rotation: rand(14, 24), autoAlpha: 0, duration: .9, ease: 'power3.out' }, at);
+      cue(tl, 'shutter', at);
       for (let k = 0; k < i; k++) tl.to(pols[k], { y: '-=9', scale: '-=.035', filter: `brightness(${1 - (i - k) * .03})`, duration: .6 }, at + .2);
     });
     tl.to({}, { duration: .8 });
@@ -379,6 +405,7 @@
         .fromTo(card, { rotation: 7, y: 46, scale: .88 }, { rotation: 0, y: 0, scale: 1, ease: 'sine.out', duration: 1 })
         .to(card, { rotation: -7, y: 46, scale: .88, ease: 'sine.in', duration: 1 });
       const img = $('.mcard__img', card);
+      ScrollTrigger.create({ containerAnimation: hTween, trigger: card, start: 'center 60%', onEnter: () => bgm.sfx('swish'), onEnterBack: () => bgm.sfx('swish', { v: .08 }) });
       if (img) gsap.fromTo(img, { '--shine': '-70%' }, { '--shine': '70%', ease: 'none', scrollTrigger: { containerAnimation: hTween, trigger: card, start: 'left right', end: 'right left', scrub: true } });
     });
   }
@@ -390,11 +417,12 @@
     const n = lines.length;
     gsap.set('.rl', { autoAlpha: 0 });
     const tl = (stormTl = pinTl('#storm .stage', 440, {
-      onToggle: (self) => { stormActive = self.isActive; if (!self.isActive) G.setRain(false); },
+      onToggle: (self) => { stormActive = self.isActive; if (!self.isActive) { G.setRain(false); bgm.setRain(0); } },
       onUpdate: (self) => {
         const p = self.progress;
         if (!stormActive) return;
         G.setRain(p > .03 && p < .56);
+        bgm.setRain(p > .03 && p < .56 ? 1 : 0);
         G.setAmbient(p > .6 ? 1 : .12);
         if (bgm.ready) bgm.blendFx(M.fx.distant, M.fx.warm, clamp((p - .55) / .35));
       },
@@ -409,6 +437,8 @@
       .to('#storm .eyebrow', { autoAlpha: 0, duration: .4 }, e)
       .to('.dawn', { scale: 1, duration: 1.8, ease: 'power2.out' }, e + .4)
       .addLabel('heartIn', e + .7)
+    cue(tl, 'thunder', 1.3); cue(tl, 'dawn', e + .45);
+    tl
       .to('.rl', { autoAlpha: 1, stagger: .5, duration: .8 }, e + 1.8)
       .from('.rl', { y: 24, filter: 'blur(8px)', stagger: .5, duration: .8 }, e + 1.8)
       .to({}, { duration: .8 });
@@ -447,6 +477,7 @@
       .to('.candle-fire', { scale: 1, stagger: .2, duration: .5, ease: 'back.out(2)' }, 3.1)
       .from('#cake-hint', { autoAlpha: 0, y: 10, duration: .5 }, 3.4)
       .to({}, { duration: .6 });
+    cue(tl, 'ignite', 3.1); cue(tl, 'ignite', 3.3);
 
     const cake = $('#cake');
     let blown = false;
@@ -459,6 +490,10 @@
       const cx = r.left + r.width / 2, cy = r.top + r.height * .25;
       G.burst(cx, cy, 90, 6);
       G.confetti(cx, cy, 220);
+      bgm.sfx('blow');
+      setTimeout(() => bgm.sfx('pop'), 250);
+      setTimeout(() => bgm.sfx('pop'), 600);
+      setTimeout(() => bgm.sfx('pop'), 900);
       setTimeout(() => G.confetti(innerWidth * .15, innerHeight * .9, 120), 350);
       setTimeout(() => G.confetti(innerWidth * .85, innerHeight * .9, 120), 650);
       bgm.playBirthdaySong();
@@ -490,9 +525,11 @@
       openedLetter = true;
       const r = env.getBoundingClientRect();
       gsap.timeline()
+        .call(() => bgm.sfx('seal'))
         .to('.env__seal', { scale: 1.3, duration: .2 })
         .to('.env__seal', { scale: 0, autoAlpha: 0, duration: .35, ease: 'back.in(2)' })
         .call(() => G.burst(r.left + r.width / 2, r.top + r.height * .56, 50, 4))
+        .call(() => bgm.sfx('paper'))
         .to('.env__flap', { rotationX: 180, duration: .8, ease: 'power2.inOut' })
         .set('.env__flap', { zIndex: 0 }, '-=.4')
         .to('.env__card', { yPercent: -62, duration: .9, ease: 'power3.out' })
@@ -530,8 +567,9 @@
     active = scene;
     tint(scene.dataset.tint);
     G.setAmbient(scene.id === 'storm' ? .12 : 1);
-    if (scene.id !== 'storm') G.setRain(false);
-    bgm.switchTo(scene.dataset.track);
+    if (scene.id !== 'storm') { G.setRain(false); bgm.setRain(0); }
+    if (bgm.scene && bgm.scene !== scene.id) bgm.sfx('whoosh');
+    bgm.playScene(scene.id);
     if (!scene.dataset.fxEnd) bgm.applyFx(M.fx[scene.dataset.fx]);
     gsap.timeline()
       .to('.chapter > *', { yPercent: -100, autoAlpha: 0, duration: .3, ease: 'power2.in' })
@@ -559,7 +597,7 @@
       <div class="row"><button data-set="start">设为起点</button><button data-set="end">设为终点</button><button data-set="test">试听循环点</button></div>
       <pre id="tn-out"></pre>`;
     document.body.appendChild(panel);
-    const cur = () => bgm.tracks[bgm.current];
+    const cur = () => { const v = bgm.voices[bgm.current]; return v && v.kind === 'song' ? v : null; };
     panel.addEventListener('click', (e) => {
       const tr = cur(); if (!tr || tr.missing) return;
       const b = e.target.closest('button'); if (!b) return;
@@ -570,8 +608,8 @@
     });
     setInterval(() => {
       const tr = cur();
-      $('#tn-info').textContent = tr ? `${tr.title}  ${tr.missing ? '(文件缺失)' : tr.el.currentTime.toFixed(1) + 's'}` : '';
-      $('#tn-out').textContent = Object.values(bgm.tracks).map((t) => `${t.id}: start: ${t.start}, end: ${t.end}`).join('\n');
+      $('#tn-info').textContent = tr ? `${tr.title}  ${tr.el.currentTime.toFixed(1)}s` : '这一章没有音乐文件，正在播合成曲';
+      $('#tn-out').textContent = `${bgm.scene}: start: ${tr ? tr.start : '-'}, end: ${tr ? tr.end : '-'}`;
     }, 200);
   }
 })();

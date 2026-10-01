@@ -35,3 +35,24 @@ GitHub Pages / Cloudflare Pages / Vercel 等正式托管都支持 Range，没问
 
 任何静态托管都可以（GitHub Pages、Cloudflare Pages、Vercel、国内的对象存储等）。
 注意：如果仓库/网站是公开的，里面的音乐文件任何人都能下载，版权上请自行斟酌（例如把仓库设为私有，或只在本地/私有托管上使用）。
+
+## 部署到自己的 VPS（1G 内存足够）
+
+这是纯静态网站，服务器只负责把文件发出去，所有动画和声音都在看网页的手机或电脑上运行。
+nginx 托管静态文件只占十几 MB 内存，1 核 1G 的 VPS 绰绰有余。
+
+```bash
+# 服务器上（Debian / Ubuntu）
+sudo apt install -y nginx certbot python3-certbot-nginx
+sudo git clone -b claude/birthday-tribute-scroll-site-p0jch7 https://github.com/zhcfoo/zzsoq.com /var/www/zzsoq.com
+sudo cp /var/www/zzsoq.com/deploy/nginx.conf /etc/nginx/conf.d/zzsoq.com.conf
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d zzsoq.com -d www.zzsoq.com   # 申请免费 HTTPS 证书
+```
+
+域名 DNS 加一条 A 记录指向 VPS 的 IP。之后更新网站：`cd /var/www/zzsoq.com && sudo git pull`。
+
+需要注意的不是内存，而是：
+- **带宽**：首次打开约下载 2–3 MB（字体按需加载），每首歌再加 3–8 MB。小带宽 VPS（如 1–3 Mbps）放了歌后第一次打开会慢一点，建议用 `tools/process-music.sh` 把歌剪成只含副歌的 128–160k 版本。
+- **国内访问**：服务器在中国大陆的话，域名需要先 ICP 备案才能用 80/443 端口；用香港、日本、新加坡等境外 VPS 不需要备案，但国内访问速度看线路。
+- **版权**：网站公开后，里面的音乐文件任何人都能下载，建议只把链接发给她。

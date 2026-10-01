@@ -211,6 +211,10 @@
       const cx = W / 2, cy = H * .34;
       const beat = hp > .95 ? 1 + .035 * Math.pow(Math.max(0, Math.sin(t * 5.2)), 12) + .02 * Math.pow(Math.max(0, Math.sin(t * 5.2 - .7)), 12) : 1;
       const S = Math.min(W * .34, H * .19) * beat;
+      // 每次“咚”的峰值通知一次（用来配心跳声）
+      const k = Math.floor((t * 5.2 - Math.PI / 2) / (Math.PI * 2));
+      if (hp > .95 && k !== state.beatK && state.onBeat) state.onBeat();
+      state.beatK = k;
       for (const p of heartPts) {
         const k = Math.min(1, Math.max(0, (hp - p.d) / .65));
         const e = k * k * (3 - 2 * k);
