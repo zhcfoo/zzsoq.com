@@ -288,6 +288,7 @@ body.is-muted .bars i { animation: none; transform: scaleY(.2); }
 .bday-cn #age-num { font: 400 1.5em/1 var(--en); color: var(--gold); margin: 0 .1em; letter-spacing: 0; }
 .cake { position: relative; margin-top: 2.5svh; border: 0; padding: 0; background: none; cursor: pointer; width: min(80vw, 36svh, 340px); aspect-ratio: 300 / 412; -webkit-tap-highlight-color: transparent; }
 .cake svg { width: 100%; height: 100%; overflow: visible; }
+.ck3d { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; }
 .cake:focus-visible { outline: 1px dashed var(--gold); outline-offset: 8px; border-radius: 16px; }
 .hint { margin: 0; font-size: 13px; letter-spacing: .3em; color: var(--ink-3); }
 

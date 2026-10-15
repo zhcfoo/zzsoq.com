@@ -480,6 +480,7 @@
       setTimeout(() => G.confetti(innerWidth * .85, innerHeight * .9, 120), 650);
       bgm.playBirthdaySong();
       window.Carousel.play(11.5);
+      setTimeout(wishComesTrue, 900);
       gsap.to('#cake-hint', { autoAlpha: 0, duration: .3, onComplete: () => { $('#cake-hint').textContent = '八音盒转起来了，愿望一定会实现。'; gsap.to('#cake-hint', { autoAlpha: 1, duration: .6 }); } });
       setTimeout(() => lenis.scrollTo('#letter-zone', { duration: 3 }), 13000);
     });
@@ -496,7 +497,34 @@
         }
       });
     }
-    cake.resetCandles = () => { blown = false; gsap.to('.candle-fire', { autoAlpha: 1, y: 0, duration: .5 }); $('#cake-hint').textContent = '闭上眼睛许个愿，然后轻触蜡烛'; };
+    cake.resetCandles = () => {
+      blown = false;
+      gsap.to('.candle-fire', { autoAlpha: 1, y: 0, duration: .5 });
+      $('#cake-hint').textContent = '闭上眼睛许个愿，然后轻触蜡烛';
+      if (unicorns) { unicorns.reset(gsap); window.Carousel.onFrame = null; }
+      gsap.to('#ck-back, #ck-front', { opacity: 1, duration: .6 });
+    };
+
+    // 愿望成真：平面的独角兽变成立体的珍珠瓷独角兽
+    let unicorns = null;
+    function wishComesTrue() {
+      load3D().then(() => {
+        if (!window.Unicorn3D) return;
+        if (!unicorns) unicorns = window.Unicorn3D.create(cake, window.Carousel.layout);
+        if (!unicorns) return;                       // 设备不支持 WebGL：保留平面木马
+        window.Carousel.onFrame = (f) => unicorns.render(f);
+        const svg = $('svg', cake), ctm = svg.getScreenCTM(), pt = svg.createSVGPoint();
+        window.Carousel.frame.forEach((f, i) => setTimeout(() => {
+          pt.x = f.x; pt.y = f.y;
+          const p = pt.matrixTransform(ctm);
+          G.burst(p.x, p.y, 40, 3.5);
+        }, 350 + i * 180));
+        bgm.sfx('magic');
+        gsap.to('#ck-back, #ck-front', { opacity: 0, duration: .7, delay: .35 });
+        unicorns.morphIn(gsap);
+        gsap.to('#cake-hint', { autoAlpha: 0, duration: .3, delay: 1.6, onComplete: () => { $('#cake-hint').textContent = '愿望成真了。'; gsap.to('#cake-hint', { autoAlpha: 1, duration: .8 }); } });
+      }).catch(() => {});
+    }
 
     // 信封
     gsap.from('.envelope', { autoAlpha: 0, y: 80, rotation: -4, duration: 1.2, ease: 'power3.out', scrollTrigger: { trigger: '#letter-zone', start: 'top 70%', toggleActions: 'play none none reverse' } });
@@ -546,6 +574,21 @@
    * ========================================================= */
   let active = null;
   const chapterNum = $('.chapter__num'), chapterName = $('.chapter__name');
+  // 立体独角兽的 3D 模块比较大（约 140 KB），快到生日那章时再在后台加载
+  let load3DPromise = null;
+  function load3D() {
+    if (!load3DPromise) {
+      load3DPromise = new Promise((resolve, reject) => {
+        const sc = document.createElement('script');
+        sc.src = 'js/unicorn3d.js';
+        sc.onload = resolve; sc.onerror = reject;
+        document.head.appendChild(sc);
+      });
+      load3DPromise.catch(() => { load3DPromise = null; });
+    }
+    return load3DPromise;
+  }
+
   function setActive(scene, force) {
     if (!opened || (active === scene && !force)) return;
     active = scene;
@@ -554,6 +597,7 @@
     if (scene.id !== 'storm') { G.setRain(false); bgm.setRain(0); }
     if (bgm.scene && bgm.scene !== scene.id) bgm.sfx('whoosh');
     bgm.playScene(scene.id);
+    if (scene.id === 'love' || scene.id === 'bday') load3D().catch(() => {});
     if (!scene.dataset.fxEnd) bgm.applyFx(M.fx[scene.dataset.fx]);
     gsap.timeline()
       .to('.chapter > *', { yPercent: -100, autoAlpha: 0, duration: .3, ease: 'power2.in' })

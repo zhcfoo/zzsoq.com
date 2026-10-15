@@ -264,6 +264,7 @@
     const ringRy = RING * K, poleTopRy = DOME.ry * RING / DOME.a;
 
     let theta = .5, speed = .22, bobAmp = .5, last = performance.now(), visible = false, t = 0, lit = 0;
+    const frameData = horses.map(() => ({ a: 0, sc: 1, bob: 0, x: 0, y: 0 }));
     function place() {
       horses.forEach((h) => {
         const a = theta + h.i * Math.PI * 2 / HORSES;
@@ -280,9 +281,11 @@
         h.pole.setAttribute('y1', f1(DOME.y + poleTopRy * c)); h.pole.setAttribute('y2', f1(ground));
         h.knob.setAttribute('cx', f1(x)); h.knob.setAttribute('cy', f1(y - 13 * sc));
         h.g.setAttribute('opacity', (.74 + .26 * depth).toFixed(2));
+        Object.assign(frameData[h.i], { a, sc, bob, x, y });
         const sideNow = c >= 0 ? 1 : -1;
         if (sideNow !== h.side) { (sideNow > 0 ? front : back).appendChild(h.g); h.side = sideNow; }
       });
+      if (window.Carousel.onFrame) window.Carousel.onFrame(frameData);
       if (lit > 0) bulbs.forEach((b, k) => b.setAttribute('opacity', (.45 + .55 * lit * Math.abs(Math.sin(t * 3 + k * .9))).toFixed(2)));
     }
     function frame(now) {
@@ -298,6 +301,12 @@
 
     const state = { get speed() { return speed; }, set speed(v) { speed = v; }, get bob() { return bobAmp; }, set bob(v) { bobAmp = v; }, get lit() { return lit; }, set lit(v) { lit = v; } };
     window.Carousel.state = state;
+    window.Carousel.frame = frameData;
+    // 给立体独角兽用的布局参数（与上面 SVG 的几何完全一致）
+    window.Carousel.layout = {
+      viewBox: host.querySelector('svg').getAttribute('viewBox').split(' ').map(Number),
+      cx: CX, top: TIER.top, K, ring: RING, drumR: DRUM.rx, domeY: DOME.y, domeA: DOME.a, domeB: DOME.b, horses: HORSES,
+    };
     window.Carousel.play = (sec) => {
       if (!window.gsap) return;
       gsap.killTweensOf(state);

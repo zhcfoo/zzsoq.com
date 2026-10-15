@@ -446,6 +446,14 @@
           for (let i = 0; i < 6; i++) { tt += .08 + Math.random() * .25; n.g.gain.linearRampToValueAtTime(.4 + Math.random() * .6, tt); }
           n.g.gain.exponentialRampToValueAtTime(.001, t + 4); break;
         }
+        case 'magic': { // 愿望成真：两个八度的铃音上行 + 一阵闪光
+          this.tone('bell', [72, 76, 79, 84, 88, 91, 96, 100], .09, .07);
+          this.tone('musicbox', [96, 100, 103, 108], .14, .1, .8);
+          const n = this.noiseNode(t, 2.4, [['bandpass', 6000, 1.5]]);
+          n.g.gain.setValueAtTime(0, t); n.g.gain.linearRampToValueAtTime(.06, t + .6); n.g.gain.exponentialRampToValueAtTime(.001, t + 2.4);
+          n.last.frequency.setValueAtTime(3000, t); n.last.frequency.exponentialRampToValueAtTime(10000, t + 2);
+          break;
+        }
         case 'dawn':    // 雨停：明亮的上行和弦
           this.tone('bell', [64, 71, 76, 79, 83, 88], .16, .06);
           this.tone('musicbox', [88, 91, 96], .2, .09, 1); break;
