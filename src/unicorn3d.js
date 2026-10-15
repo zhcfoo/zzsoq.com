@@ -4,7 +4,8 @@
  * 3D 画布盖在 SVG 蛋糕上，用与 SVG 完全相同的透视（正交相机俯视 asin(K)），
  * 所以立体马的位置、大小和原来的平面马一一对应。
  * 中柱和穹顶放了“只写深度”的隐形遮挡体，转到后面的马会被中柱挡住、头不会穿出穹顶。
- * 变身：每匹马的厚度从接近 0（像一张纸）弹性膨胀到完整立体，同时泛起粉色珠光。 */
+ * 变身：每匹马的厚度从接近 0（像一张纸）弹性膨胀到完整立体，同时泛起粉色珠光；
+ * 然后跳下立杆落到蛋糕顶面，四条腿交替奔跑（身体起伏、点头、甩尾巴），转得越快跑得越快。 */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
@@ -30,80 +31,117 @@ function makeMaterials() {
   };
 }
 
-// 旋转木马独角兽：单位与 SVG 中的马一致（原点在马鞍、x 朝前、y 朝上、z 是左右厚度）
+// 独角兽：单位与 SVG 中的马一致（原点在马鞍、x 朝前、y 朝上、z 是左右厚度）
+// 带简单骨骼：身体(body) → 脖子(neck，含头)、尾巴(tail)、四条腿（大腿 → 膝 → 小腿 + 马蹄），用来跑步。
 function makeUnicorn(M) {
-  const g = new THREE.Group();
-  const blob = (pos, scale, mat, rot) => {
-    const m = new THREE.Mesh(SPHERE, mat);
-    m.position.set(...pos); m.scale.set(...scale);
-    if (rot) m.rotation.set(...rot);
-    g.add(m); return m;
+  const root = new THREE.Group();
+  const group = (parent, name, origin) => {
+    const g = new THREE.Group();
+    g.name = name;
+    g.userData.o = origin;                                       // 这个关节在马身上的绝对位置
+    const po = parent.userData.o || [0, 0, 0];
+    g.position.set(origin[0] - po[0], origin[1] - po[1], origin[2] - po[2]);
+    parent.add(g); return g;
   };
-  const limb = (a, b, r, mat) => {
-    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), d = B.clone().sub(A);
+  const rel = (parent, v) => { const o = parent.userData.o || [0, 0, 0]; return [v[0] - o[0], v[1] - o[1], v[2] - o[2]]; };
+  const blob = (parent, pos, scale, mat, rot) => {
+    const m = new THREE.Mesh(SPHERE, mat);
+    m.position.set(...rel(parent, pos)); m.scale.set(...scale);
+    if (rot) m.rotation.set(...rot);
+    parent.add(m); return m;
+  };
+  const limb = (parent, a, b, r, mat) => {
+    const A = new THREE.Vector3(...rel(parent, a)), B = new THREE.Vector3(...rel(parent, b)), d = B.clone().sub(A);
     const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, d.length(), 6, 16), mat);
     m.position.copy(A).add(B).multiplyScalar(.5);
     m.quaternion.setFromUnitVectors(Y, d.normalize());
-    g.add(m); return m;
+    parent.add(m); return m;
   };
+  root.userData.o = [0, 0, 0];
+  const body = group(root, 'body', [0, 0, 0]);
 
-  // 身体
-  blob([-3, 4, 0], [19, 8.6, 7.6], M.porcelain);
-  blob([10.5, 3.4, 0], [8.4, 8.2, 7.4], M.porcelain);
-  blob([-15.5, 5.2, 0], [8.8, 8.6, 7.8], M.porcelain);
-  // 脖子、头
-  limb([11, 5, 0], [20.5, 19.5, 0], 5.3, M.porcelain);
-  blob([25, 22.6, 0], [7.4, 4.5, 4.2], M.porcelain, [0, 0, -.72]);
-  blob([29.6, 18.6, 0], [3.5, 3.1, 3.4], M.porcelain);
+  // 身体 + 马鞍
+  blob(body, [-3, 4, 0], [19, 8.6, 7.6], M.porcelain);
+  blob(body, [10.5, 3.4, 0], [8.4, 8.2, 7.4], M.porcelain);
+  blob(body, [-15.5, 5.2, 0], [8.8, 8.6, 7.8], M.porcelain);
+  blob(body, [-1, 7.2, 0], [6.8, 6.5, 8.2], M.saddle);
+  blob(body, [-1, 12.7, 0], [6, 1.9, 5.3], M.saddle);
+  const trim = new THREE.Mesh(new THREE.TorusGeometry(7, .45, 8, 48), M.gold);
+  trim.rotation.x = Math.PI / 2; trim.scale.set(1, 8.25 / 7, 1); trim.position.set(-1, 9.4, 0); body.add(trim);
+  blob(body, [-1, 14.4, 0], [1.8, 1.4, 1.8], M.pearl);
+
+  // 脖子 + 头（一起点头）
+  const neck = group(body, 'neck', [11, 5, 0]);
+  limb(neck, [11, 5, 0], [20.5, 19.5, 0], 5.3, M.porcelain);
+  blob(neck, [25, 22.6, 0], [7.4, 4.5, 4.2], M.porcelain, [0, 0, -.72]);
+  blob(neck, [29.6, 18.6, 0], [3.5, 3.1, 3.4], M.porcelain);
   [-1, 1].forEach((s) => {
     const ear = new THREE.Mesh(new THREE.ConeGeometry(1.35, 4.4, 14), M.porcelain);
-    ear.position.set(22.4, 28.8, 2 * s); ear.rotation.set(.22 * s, 0, .38); g.add(ear);
-    blob([26.5, 23.7, 3.5 * s], [.95, .95, .55], M.eye);
-    blob([26.9, 24.1, 3.75 * s], [.28, .28, .2], M.pearl);
-    blob([27.6, 20.8, 3.2 * s], [1.6, .9, .35], M.pink);           // 腮红
+    ear.position.set(...rel(neck, [22.4, 28.8, 2 * s])); ear.rotation.set(.22 * s, 0, .38); neck.add(ear);
+    blob(neck, [26.5, 23.7, 3.5 * s], [.95, .95, .55], M.eye);
+    blob(neck, [26.9, 24.1, 3.75 * s], [.28, .28, .2], M.pearl);
+    blob(neck, [27.6, 20.8, 3.2 * s], [1.6, .9, .35], M.pink);
   });
-  // 金色独角
   const horn = new THREE.Mesh(new THREE.ConeGeometry(1.4, 10.5, 20), M.gold);
-  horn.position.set(25.8, 31.4, 0); horn.rotation.z = -.5; g.add(horn);
+  horn.position.set(...rel(neck, [25.8, 31.4, 0])); horn.rotation.z = -.5; neck.add(horn);
   [0, 1, 2].forEach((k) => {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1.15 - k * .32, .22, 8, 20), M.gold);
-    ring.position.set(25.5 + k * 1.15, 28.4 + k * 2.2, 0); ring.rotation.set(Math.PI / 2, -.5, 0); g.add(ring);
+    ring.position.set(...rel(neck, [25.5 + k * 1.15, 28.4 + k * 2.2, 0])); ring.rotation.set(Math.PI / 2, -.5, 0); neck.add(ring);
   });
-  // 鬃毛（沿脖子背后的一串卷）、额毛
   const n0 = new THREE.Vector3(11, 5, 0), n1 = new THREE.Vector3(20.5, 19.5, 0);
   const back = new THREE.Vector3(-(n1.y - n0.y), n1.x - n0.x, 0).normalize().multiplyScalar(4.6);
   for (let i = 0; i < 8; i++) {
-    const t = i / 7, p = n0.clone().lerp(n1, .12 + t * .92).add(back);
-    const r = 3.3 - t * 1.1;
-    blob([p.x, p.y, (i % 2 ? 1 : -1) * 1.3], [r, r, r * .95], M.pink);
+    const t = i / 7, p = n0.clone().lerp(n1, .12 + t * .92).add(back), r = 3.3 - t * 1.1;
+    blob(neck, [p.x, p.y, (i % 2 ? 1 : -1) * 1.3], [r, r, r * .95], M.pink);
   }
-  blob([23.6, 27.6, 0], [2.4, 2, 2.6], M.pink);
-  // 尾巴
-  const tail = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-22, 8, 0), new THREE.Vector3(-28.5, 7, 0), new THREE.Vector3(-31.5, 1, 0),
-    new THREE.Vector3(-30.5, -7, 0), new THREE.Vector3(-27, -11.5, 0),
-  ]);
-  g.add(new THREE.Mesh(new THREE.TubeGeometry(tail, 40, 2.7, 14), M.pink));
-  blob([-27, -11.5, 0], [2.7, 2.7, 2.7], M.pink);
-  // 腿：前腿抬起（腾跃），后腿着地
-  const leg = (pts, r1, r2) => {
-    limb(pts[0], pts[1], r1, M.porcelain);
-    limb(pts[1], pts[2], r2, M.porcelain);
-    limb(pts[2], pts[3], r2 + .25, M.gold);
-  };
-  leg([[12, 0, 3.6], [19.5, -1.4, 3.6], [24, -5.6, 3.6], [25.2, -6.9, 3.6]], 2.8, 2.2);
-  leg([[9.5, -1.5, -3.6], [14, -8, -3.6], [18.5, -12, -3.6], [19.8, -13.2, -3.6]], 2.8, 2.2);
-  leg([[-16, -1, 3.8], [-18.5, -10, 3.8], [-19, -18.4, 3.8], [-19, -20.4, 3.8]], 3.1, 2.25);
-  leg([[-12, -1, -3.8], [-11, -9.5, -3.8], [-11.6, -17.4, -3.8], [-11.6, -19.4, -3.8]], 3, 2.25);
-  // 马鞍：鞍褥包住身体两侧 + 鞍座 + 金边 + 缰绳
-  blob([-1, 7.2, 0], [6.8, 6.5, 8.2], M.saddle);
-  blob([-1, 12.7, 0], [6, 1.9, 5.3], M.saddle);
-  const trim = new THREE.Mesh(new THREE.TorusGeometry(7, .45, 8, 48), M.gold);
-  trim.rotation.x = Math.PI / 2; trim.scale.set(1, 8.25 / 7, 1); trim.position.set(-1, 9.4, 0); g.add(trim);
+  blob(neck, [23.6, 27.6, 0], [2.4, 2, 2.6], M.pink);
   const bridle = new THREE.Mesh(new THREE.TorusGeometry(3.3, .38, 8, 28), M.gold);
-  bridle.position.set(28.6, 19.6, 0); bridle.rotation.set(0, Math.PI / 2, -.72); g.add(bridle);
-  blob([0, 15.4, 0], [2.5, 2.5, 2.5], M.pearl);                      // 立杆上的珍珠
-  return g;
+  bridle.position.set(...rel(neck, [28.6, 19.6, 0])); bridle.rotation.set(0, Math.PI / 2, -.72); neck.add(bridle);
+
+  // 尾巴（随步伐甩动）
+  const tail = group(body, 'tail', [-22, 8, 0]);
+  const curve = new THREE.CatmullRomCurve3([[-22, 8], [-28.5, 7], [-31.5, 1], [-30.5, -7], [-27, -11.5]].map(([x, y]) => new THREE.Vector3(...rel(tail, [x, y, 0]))));
+  tail.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 2.7, 14), M.pink));
+  blob(tail, [-27, -11.5, 0], [2.7, 2.7, 2.7], M.pink);
+
+  // 四条腿：大腿关节在肩/髋，膝关节在中间
+  const LEGS = [
+    { name: 'FL', hip: [11.5, .5, 3.6], L1: 9.4, L2: 9, r1: 2.8, r2: 2.2, front: true },
+    { name: 'FR', hip: [11.5, .5, -3.6], L1: 9.4, L2: 9, r1: 2.8, r2: 2.2, front: true },
+    { name: 'HL', hip: [-15.5, 1, 3.8], L1: 9.8, L2: 9.4, r1: 3.1, r2: 2.25, front: false },
+    { name: 'HR', hip: [-15.5, 1, -3.8], L1: 9.8, L2: 9.4, r1: 3.1, r2: 2.25, front: false },
+  ];
+  LEGS.forEach((l) => {
+    const upper = group(body, 'u' + l.name, l.hip);
+    limb(upper, l.hip, [l.hip[0], l.hip[1] - l.L1, l.hip[2]], l.r1, M.porcelain);
+    const knee = group(upper, 'k' + l.name, [l.hip[0], l.hip[1] - l.L1, l.hip[2]]);
+    const ko = knee.userData.o;
+    limb(knee, ko, [ko[0], ko[1] - l.L2, ko[2]], l.r2, M.porcelain);
+    limb(knee, [ko[0], ko[1] - l.L2, ko[2]], [ko[0], ko[1] - l.L2 - 1.6, ko[2]], l.r2 + .3, M.gold);
+  });
+  root.userData.legs = LEGS;
+  return root;
+}
+
+// 跑步姿态：phase 为步伐相位（弧度），amp 为幅度（0 = 静止站立）
+const LEG_PHASE = { HL: 0, HR: .55, FL: 3.2, FR: 3.75 };
+function pose(R, phase, amp) {
+  const j = R.joints;
+  j.body.position.y = amp * 1.5 * Math.sin(phase + 1.4);
+  j.body.rotation.z = amp * .075 * Math.sin(phase + .3);
+  j.neck.rotation.z = amp * .15 * Math.sin(phase + 2.1);
+  j.tail.rotation.z = -amp * .28 + amp * .22 * Math.sin(phase + 3);
+  ['FL', 'FR', 'HL', 'HR'].forEach((n) => {
+    const p = phase + LEG_PHASE[n], front = n[0] === 'F';
+    const swing = Math.sin(p), lift = Math.max(0, Math.cos(p));
+    if (front) {
+      j['u' + n].rotation.z = amp * (.2 + .7 * swing);
+      j['k' + n].rotation.z = -amp * 1.25 * lift;              // 前腿抬起时膝盖往后折
+    } else {
+      j['u' + n].rotation.z = -.12 * (1 - amp) + amp * (-.15 + .6 * swing);
+      j['k' + n].rotation.z = .2 * (1 - amp) + amp * (.15 + 1.05 * lift);   // 后腿跗关节往前折
+    }
+  });
 }
 
 function shadowTexture() {
@@ -162,19 +200,23 @@ export function create(host, L) {
   valance.position.y = rimH - valH / 2;
   [drum, domeM, valance].forEach((m) => { m.renderOrder = -1; scene.add(m); });
 
-  // 四匹马 + 立杆 + 投影
+  // 四匹马（没有立杆，落在蛋糕顶面上跑）+ 脚下的影子
   const M = makeMaterials();
   const proto = makeUnicorn(M);
-  const poleGeo = new THREE.CylinderGeometry(1.5, 1.5, rimH, 16);
-  const shadowMat = new THREE.MeshBasicMaterial({ map: shadowTexture(), transparent: true, depthWrite: false, opacity: 0 });
-  const shadowGeo = new THREE.PlaneGeometry(64, 34);
-  const riders = Array.from({ length: L.horses }, () => {
+  const GROUND = -new THREE.Box3().setFromObject(proto).min.y;   // 站立时马鞍离地的高度
+  const shadowGeo = new THREE.PlaneGeometry(64, 30);
+  const tex = shadowTexture();
+  const riders = Array.from({ length: L.horses }, (_, i) => {
     const horse = proto.clone();
-    const pole = new THREE.Mesh(poleGeo, M.gold);
+    const joints = {};
+    horse.traverse((o) => { if (o.name) joints[o.name] = o; });
+    const shadowMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0 });
     const shadow = new THREE.Mesh(shadowGeo, shadowMat);
     shadow.rotation.x = -Math.PI / 2;
-    scene.add(horse, pole, shadow);
-    return { horse, pole, shadow, morph: .03 };
+    scene.add(horse, shadow);
+    const R = { horse, shadow, shadowMat, joints, morph: .03, land: 0, phase: i * 1.6 };
+    pose(R, 0, 0);
+    return R;
   });
 
   function resize() {
@@ -184,19 +226,28 @@ export function create(host, L) {
   resize();
   new ResizeObserver(resize).observe(host);
 
-  let active = false;
+  let active = false, last = performance.now();
   function render(frame) {
+    const now = performance.now(), dt = Math.min(.05, (now - last) / 1000);
+    last = now;
     if (!active || !frame) return;
+    const speed = (window.Carousel && window.Carousel.state) ? window.Carousel.state.speed : .5;
+    const freq = .9 + speed * 1.6;                       // 转得越快，步子越快
+    const amp0 = Math.min(1, .5 + speed * .45);
     frame.forEach((f, i) => {
       const R = riders[i]; if (!R) return;
       const x = L.ring * Math.sin(f.a), z = L.ring * Math.cos(f.a);
-      R.horse.position.set(x, (42 - f.bob) / cosA, z);
+      R.phase += Math.PI * 2 * freq * dt;
+      pose(R, R.phase, amp0 * R.land);
+      // 从原来立杆上的高度，落到蛋糕顶面
+      const onPole = (42 - f.bob) / cosA, onGround = GROUND * f.sc;
+      R.horse.position.set(x, onPole + (onGround - onPole) * R.land, z);
       R.horse.rotation.y = f.a;
       R.horse.scale.set(f.sc, f.sc, f.sc * R.morph);
-      R.pole.position.set(x, rimH / 2, z);
       R.shadow.position.set(x, .4, z);
       R.shadow.rotation.z = f.a;
-      R.shadow.scale.set(f.sc, f.sc, 1);
+      R.shadow.scale.set(f.sc * .9, f.sc * .9, 1);
+      R.shadowMat.opacity = .38 * R.land;
     });
     renderer.render(scene, cam);
   }
@@ -213,14 +264,16 @@ export function create(host, L) {
         .to(M.porcelain, { emissiveIntensity: .9, duration: .4 }, 0)
         .to(M.porcelain, { emissiveIntensity: 0, duration: 2.4, ease: 'power2.out' }, .6)
         .to(M.porcelain, { iridescence: 1, duration: .6 }, 0)
-        .to(M.porcelain, { iridescence: .55, duration: 2.2 }, 1.2)
-        .to(shadowMat, { opacity: .35, duration: 1.2 }, .6);
-      riders.forEach((r, i) => tl.to(r, { morph: 1, duration: 1.8, ease: 'elastic.out(1, .45)' }, .35 + i * .18));
+        .to(M.porcelain, { iridescence: .55, duration: 2.2 }, 1.2);
+      riders.forEach((r, i) => {
+        r.land = 0;
+        tl.to(r, { morph: 1, duration: 1.8, ease: 'elastic.out(1, .45)' }, .35 + i * .18)
+          .to(r, { land: 1, duration: 1.1, ease: 'bounce.out' }, 1.1 + i * .18);   // 跳下立杆，开始奔跑
+      });
       return tl;
     },
     reset(gsap) {
-      gsap.to(canvas, { opacity: 0, duration: .6, onComplete: () => { active = false; } });
-      shadowMat.opacity = 0;
+      gsap.to(canvas, { opacity: 0, duration: .6, onComplete: () => { active = false; riders.forEach((r) => { r.land = 0; }); } });
     },
   };
 }
