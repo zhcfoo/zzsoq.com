@@ -5,7 +5,8 @@
  * 所以立体马的位置、大小和原来的平面马一一对应。
  * 中柱和穹顶放了“只写深度”的隐形遮挡体，转到后面的马会被中柱挡住、头不会穿出穹顶。
  * 变身：每匹马的厚度从接近 0（像一张纸）弹性膨胀到完整立体，同时泛起粉色珠光；
- * 然后跳下立杆落到蛋糕顶面，四条腿交替奔跑（身体起伏、点头、甩尾巴），转得越快跑得越快。 */
+ * 然后背上长出一对珍珠色的翅膀，慢慢扇动，离开立杆，绕着整个蛋糕盘旋飞行：
+ * 起伏的航线、转弯时向内侧倾斜、爬升时抬头，腿收起、尾巴飘动，所有动作都是连续的正弦曲线，没有突变。 */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
@@ -28,7 +29,33 @@ function makeMaterials() {
     gold: new THREE.MeshStandardMaterial({ color: 0xe8c27a, metalness: 1, roughness: .2 }),
     eye: new THREE.MeshStandardMaterial({ color: 0x3d262c, roughness: .12, metalness: .1 }),
     pearl: new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .12, clearcoat: 1, iridescence: .9, iridescenceIOR: 1.4 }),
+    wing: new THREE.MeshPhysicalMaterial({
+      color: 0xffffff, roughness: .32, clearcoat: 1, clearcoatRoughness: .2, sheen: 1, sheenColor: new THREE.Color(0xffe3ee),
+      iridescence: 1, iridescenceIOR: 1.45, iridescenceThicknessRange: [200, 640], side: THREE.DoubleSide,
+    }),
+    wingPink: new THREE.MeshPhysicalMaterial({
+      color: 0xffd9e6, roughness: .34, clearcoat: .8, sheen: 1, sheenColor: new THREE.Color(0xfff0f5),
+      iridescence: .8, iridescenceIOR: 1.4, side: THREE.DoubleSide,
+    }),
   };
+}
+
+// 一只翅膀：三层羽毛（长飞羽、粉色次级飞羽、根部覆羽）向后扇形展开，沿 +z 方向
+function makeWing(M) {
+  const w = new THREE.Group();
+  const feather = (len, width, angle, offset, y, mat) => {
+    const m = new THREE.Mesh(SPHERE, mat);
+    m.scale.set(width, .5, len / 2);
+    m.rotation.y = angle;                                        // 负角度 = 向后掠
+    m.position.set(Math.sin(angle) * (offset + len / 2), y, Math.cos(angle) * (offset + len / 2));
+    w.add(m);
+  };
+  [[34, -.1], [32, -.3], [29, -.5], [25.5, -.7], [21.5, -.9], [17.5, -1.1], [14, -1.28]].forEach(([l, a]) => feather(l, 3.6, a, 2.5, 0, M.wing));
+  [[22, -.18], [20, -.42], [17.5, -.66], [14.5, -.9], [11.5, -1.14]].forEach(([l, a]) => feather(l, 3.8, a, 1.8, .65, M.wingPink));
+  [[11, -.08], [10, -.4], [9, -.72], [8, -1.04]].forEach(([l, a]) => feather(l, 4, a, .8, 1.25, M.wing));
+  const root = new THREE.Mesh(SPHERE, M.gold);
+  root.scale.set(2.2, 1.6, 2.2); root.position.y = .7; w.add(root);
+  return w;
 }
 
 // 独角兽：单位与 SVG 中的马一致（原点在马鞍、x 朝前、y 朝上、z 是左右厚度）
@@ -68,7 +95,12 @@ function makeUnicorn(M) {
   blob(body, [-1, 12.7, 0], [6, 1.9, 5.3], M.saddle);
   const trim = new THREE.Mesh(new THREE.TorusGeometry(7, .45, 8, 48), M.gold);
   trim.rotation.x = Math.PI / 2; trim.scale.set(1, 8.25 / 7, 1); trim.position.set(-1, 9.4, 0); body.add(trim);
-  blob(body, [-1, 14.4, 0], [1.8, 1.4, 1.8], M.pearl);
+  // 翅膀（右翼朝 +z 展开，左翼是镜像）；变身前缩成 0
+  [1, -1].forEach((side) => {
+    const w = group(body, side > 0 ? 'wingR' : 'wingL', [4, 12.5, 5.2 * side]);
+    w.add(makeWing(M));
+    w.scale.set(0.001, 0.001, 0.001 * side);
+  });
 
   // 脖子 + 头（一起点头）
   const neck = group(body, 'neck', [11, 5, 0]);
@@ -123,37 +155,31 @@ function makeUnicorn(M) {
   return root;
 }
 
-// 跑步姿态：phase 为步伐相位（弧度），amp 为幅度（0 = 静止站立）
-const LEG_PHASE = { HL: 0, HR: .55, FL: 3.2, FR: 3.75 };
-function pose(R, phase, amp) {
-  const j = R.joints;
-  j.body.position.y = amp * 1.5 * Math.sin(phase + 1.4);
-  j.body.rotation.z = amp * .075 * Math.sin(phase + .3);
-  j.neck.rotation.z = amp * .15 * Math.sin(phase + 2.1);
-  j.tail.rotation.z = -amp * .28 + amp * .22 * Math.sin(phase + 3);
-  ['FL', 'FR', 'HL', 'HR'].forEach((n) => {
-    const p = phase + LEG_PHASE[n], front = n[0] === 'F';
-    const swing = Math.sin(p), lift = Math.max(0, Math.cos(p));
-    if (front) {
-      j['u' + n].rotation.z = amp * (.2 + .7 * swing);
-      j['k' + n].rotation.z = -amp * 1.25 * lift;              // 前腿抬起时膝盖往后折
-    } else {
-      j['u' + n].rotation.z = -.12 * (1 - amp) + amp * (-.15 + .6 * swing);
-      j['k' + n].rotation.z = .2 * (1 - amp) + amp * (.15 + 1.05 * lift);   // 后腿跗关节往前折
-    }
+// 飞行姿态：phase 为扇翅相位（弧度），fly 为飞行程度（0 = 原来的站姿，1 = 完全飞起来），wings 为翅膀长出的程度
+const lerp = (x, y, t) => x + (y - x) * t;
+function pose(R, phase, fly, wings) {
+  const j = R.joints, sn = Math.sin(phase);
+  // 翅膀：上扇幅度大、下扇有力，正弦连续；上扇时略微向后收
+  const flap = (.22 + .62 * sn) * wings;
+  j.wingR.rotation.set(-flap, .14 * Math.sin(phase - .6) * wings, 0);
+  j.wingL.rotation.set(flap, -.14 * Math.sin(phase - .6) * wings, 0);
+  const ws = Math.max(.001, wings);
+  j.wingR.scale.set(ws, ws, ws);
+  j.wingL.scale.set(ws, ws, -ws);
+  // 下扇时身体被托起
+  j.body.position.y = -1.3 * sn * fly;
+  j.body.rotation.z = .035 * Math.sin(phase + .8) * fly;
+  j.neck.rotation.z = lerp(0, .1, fly) + .05 * Math.sin(phase + .9) * fly;
+  j.tail.rotation.z = lerp(0, -.5, fly) + .12 * Math.sin(phase * .5 + 1) * fly;
+  // 前腿收起、后腿向后伸展，随扇翅轻轻摆动
+  ['FL', 'FR'].forEach((n, k) => {
+    j['u' + n].rotation.z = lerp(0, .95, fly) + .07 * Math.sin(phase + k * .4) * fly;
+    j['k' + n].rotation.z = lerp(0, -1.75, fly);
   });
-}
-
-function shadowTexture() {
-  const c = document.createElement('canvas');
-  c.width = c.height = 128;
-  const x = c.getContext('2d');
-  const gr = x.createRadialGradient(64, 64, 0, 64, 64, 64);
-  gr.addColorStop(0, 'rgba(120,60,70,.55)'); gr.addColorStop(1, 'rgba(120,60,70,0)');
-  x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
+  ['HL', 'HR'].forEach((n, k) => {
+    j['u' + n].rotation.z = lerp(-.12, -.85, fly) + .06 * Math.sin(phase + 1 + k * .4) * fly;
+    j['k' + n].rotation.z = lerp(.2, .45, fly);
+  });
 }
 
 export function create(host, L) {
@@ -184,7 +210,9 @@ export function create(host, L) {
   // 与 SVG 相同的投影：俯视角 asin(K)，1 世界单位 = 1 个 SVG 单位，世界原点 = 底层蛋糕顶面中心
   const sinA = L.K, cosA = Math.sqrt(1 - sinA * sinA);
   const [vx, vy, vw, vh] = L.viewBox;
-  const cam = new THREE.OrthographicCamera(vx - L.cx, vx + vw - L.cx, L.top - vy, L.top - (vy + vh), 1, 5000);
+  // 画布比蛋糕大一圈（与 CSS 里 .ck3d 的外扩比例一致），独角兽可以飞到蛋糕外面
+  const EX = { l: .3, r: .3, t: .12, b: .08 };
+  const cam = new THREE.OrthographicCamera(vx - vw * EX.l - L.cx, vx + vw * (1 + EX.r) - L.cx, L.top - (vy - vh * EX.t), L.top - (vy + vh * (1 + EX.b)), 1, 5000);
   cam.position.set(0, 2000 * sinA, 2000 * cosA);
   cam.lookAt(0, 0, 0);
 
@@ -200,54 +228,54 @@ export function create(host, L) {
   valance.position.y = rimH - valH / 2;
   [drum, domeM, valance].forEach((m) => { m.renderOrder = -1; scene.add(m); });
 
-  // 四匹马（没有立杆，落在蛋糕顶面上跑）+ 脚下的影子
+  // 四匹独角兽
   const M = makeMaterials();
   const proto = makeUnicorn(M);
-  const GROUND = -new THREE.Box3().setFromObject(proto).min.y;   // 站立时马鞍离地的高度
-  const shadowGeo = new THREE.PlaneGeometry(64, 30);
-  const tex = shadowTexture();
   const riders = Array.from({ length: L.horses }, (_, i) => {
     const horse = proto.clone();
+    horse.rotation.order = 'YXZ';                                // 先朝向，再倾斜、俯仰
     const joints = {};
     horse.traverse((o) => { if (o.name) joints[o.name] = o; });
-    const shadowMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0 });
-    const shadow = new THREE.Mesh(shadowGeo, shadowMat);
-    shadow.rotation.x = -Math.PI / 2;
-    scene.add(horse, shadow);
-    const R = { horse, shadow, shadowMat, joints, morph: .03, land: 0, phase: i * 1.6 };
-    pose(R, 0, 0);
+    scene.add(horse);
+    const R = { horse, joints, i, morph: .03, wings: 0, fly: 0, phase: i * 1.7, a: null };
+    pose(R, 0, 0, 0);
     return R;
   });
 
   function resize() {
-    const r = host.getBoundingClientRect();
+    const r = canvas.getBoundingClientRect();
     if (r.width && r.height) renderer.setSize(r.width, r.height, false);
   }
   resize();
-  new ResizeObserver(resize).observe(host);
+  new ResizeObserver(resize).observe(canvas);
 
+  const FLY = { r: 122, h: 64, wave: 11, speed: .55, flapHz: 1.45 };
   let active = false, last = performance.now();
   function render(frame) {
     const now = performance.now(), dt = Math.min(.05, (now - last) / 1000);
     last = now;
     if (!active || !frame) return;
-    const speed = (window.Carousel && window.Carousel.state) ? window.Carousel.state.speed : .5;
-    const freq = .9 + speed * 1.6;                       // 转得越快，步子越快
-    const amp0 = Math.min(1, .5 + speed * .45);
+    const cs = (window.Carousel && window.Carousel.state) ? window.Carousel.state.speed : .5;
     frame.forEach((f, i) => {
       const R = riders[i]; if (!R) return;
-      const x = L.ring * Math.sin(f.a), z = L.ring * Math.cos(f.a);
-      R.phase += Math.PI * 2 * freq * dt;
-      pose(R, R.phase, amp0 * R.land);
-      // 从原来立杆上的高度，落到蛋糕顶面
-      const onPole = (42 - f.bob) / cosA, onGround = GROUND * f.sc;
-      R.horse.position.set(x, onPole + (onGround - onPole) * R.land, z);
-      R.horse.rotation.y = f.a;
-      R.horse.scale.set(f.sc, f.sc, f.sc * R.morph);
-      R.shadow.position.set(x, .4, z);
-      R.shadow.rotation.z = f.a;
-      R.shadow.scale.set(f.sc * .9, f.sc * .9, 1);
-      R.shadowMat.opacity = .38 * R.land;
+      if (R.a == null) R.a = f.a;
+      const fly = R.fly;
+      // 角速度：从八音盒的转速平滑过渡到飞行速度
+      R.a += (cs + (FLY.speed - cs) * fly) * dt;
+      R.phase += Math.PI * 2 * FLY.flapHz * dt;
+      const a = R.a, ca = Math.cos(a);
+      const r = L.ring + (FLY.r - L.ring) * fly;
+      // 高度：从立杆上的位置，平滑升到起伏的航线
+      const wave = 2 * a + i * 1.7;
+      const onPole = (42 - f.bob) / cosA, inAir = FLY.h + FLY.wave * Math.sin(wave);
+      const h = onPole + (inAir - onPole) * fly;
+      const sc = (.78 + .22 * (ca + 1) / 2) * 1.42 * (1 - .1 * fly);
+      R.horse.position.set(r * Math.sin(a), h, r * ca);
+      R.horse.rotation.y = a;
+      R.horse.rotation.x = -.24 * fly;                                           // 转弯时向圆心倾斜
+      R.horse.rotation.z = Math.atan(2 * FLY.wave * Math.cos(wave) / r) * fly;   // 爬升时抬头、下降时低头
+      R.horse.scale.set(sc, sc, sc * R.morph);
+      pose(R, R.phase, fly, R.wings);
     });
     renderer.render(scene, cam);
   }
@@ -266,14 +294,15 @@ export function create(host, L) {
         .to(M.porcelain, { iridescence: 1, duration: .6 }, 0)
         .to(M.porcelain, { iridescence: .55, duration: 2.2 }, 1.2);
       riders.forEach((r, i) => {
-        r.land = 0;
+        r.fly = 0; r.wings = 0; r.a = null;
         tl.to(r, { morph: 1, duration: 1.8, ease: 'elastic.out(1, .45)' }, .35 + i * .18)
-          .to(r, { land: 1, duration: 1.1, ease: 'bounce.out' }, 1.1 + i * .18);   // 跳下立杆，开始奔跑
+          .to(r, { wings: 1, duration: 1.4, ease: 'back.out(1.4)' }, 1 + i * .2)    // 长出翅膀
+          .to(r, { fly: 1, duration: 3.4, ease: 'sine.inOut' }, 1.5 + i * .25);     // 离开立杆，飞起来
       });
       return tl;
     },
     reset(gsap) {
-      gsap.to(canvas, { opacity: 0, duration: .6, onComplete: () => { active = false; riders.forEach((r) => { r.land = 0; }); } });
+      gsap.to(canvas, { opacity: 0, duration: .6, onComplete: () => { active = false; riders.forEach((r) => { r.fly = 0; r.wings = 0; r.a = null; }); } });
     },
   };
 }
