@@ -185,27 +185,31 @@
         if (Math.cos(rad(ml)) > .2) s += `<circle class="ck-bulb" cx="${f1(bx)}" cy="${f1(by)}" r="1.7" fill="#fff4cf"/>`;
       }
     }
-    // 穹顶最高处：一圈珍珠托座，数字蜡烛插在上面
-    const topY = DOME.y - DOME.b + 2;
-    s += `<ellipse cx="${CX}" cy="${topY}" rx="25" ry="${f1(25 * K)}" fill="url(#ckPearlBand)"/>`;
-    for (let a = 0; a < 360; a += 20) {
+    // 穹顶最高处：一圈珍珠托座，数字蜡烛插在上面（按真实数字蜡烛的比例：约为蛋糕总高的四分之一）
+    const topY = DOME.y - DOME.b + 3;
+    const CR = 40;                                  // 托座半径
+    s += `<ellipse cx="${CX}" cy="${topY}" rx="${CR}" ry="${f1(CR * K)}" fill="url(#ckPearlBand)"/>`;
+    for (let a = 0; a < 360; a += 15) {
       const sn = Math.sin(rad(a));
-      s += `<circle cx="${f1(CX + 25 * Math.cos(rad(a)))}" cy="${f1(topY + 25 * K * sn)}" r="${f1(1.9 + 1 * (sn + 1) / 2)}" fill="url(#ckPearl)"/>`;
+      s += `<circle cx="${f1(CX + CR * Math.cos(rad(a)))}" cy="${f1(topY + CR * K * sn)}" r="${f1(2.2 + 1.2 * (sn + 1) / 2)}" fill="url(#ckPearl)"/>`;
     }
+    const FS = 74, DH = FS * .63, GAP = FS * .56; // 字号、数字高度、两根蜡烛间距
     s += `<g class="candles" id="candles">${digits.map((d, i) => {
-      const x = CX + (i - (digits.length - 1) / 2) * 27, base = topY + 3, y0 = base - 37;
+      const x = CX + (i - (digits.length - 1) / 2) * GAP, base = topY + 4, tip = base - DH;
+      const w0 = tip - 11, y0 = w0 - 4;               // 烛芯顶端、火焰底部
+      const fl = (k) => f1(k);
       return `<g class="candle">
-        <path d="M${x} ${y0 + 2} V${y0 + 12}" stroke="#6b5040" stroke-width="1.2"/>
-        <g class="candle-fire"><circle cx="${x}" cy="${y0 - 5}" r="15" fill="url(#flameHalo)"/>
-        <path class="candle-flame" d="M${x} ${y0 - 18} C${x + 6} ${y0 - 8} ${x + 6.5} ${y0 - 2} ${x} ${y0 + 4} C${x - 6.5} ${y0 - 2} ${x - 6} ${y0 - 8} ${x} ${y0 - 18}Z" fill="url(#flameG)"/></g>
-        <text x="${x}" y="${base}" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-weight="500" font-size="42" style="font-variant-numeric: lining-nums" fill="url(#foilText)" stroke="#a47b3f" stroke-width=".5">${d}</text>
+        <path d="M${x} ${fl(w0)} V${fl(tip + 2)}" stroke="#6b5040" stroke-width="1.6" stroke-linecap="round"/>
+        <g class="candle-fire"><circle cx="${x}" cy="${fl(y0 - 9)}" r="22" fill="url(#flameHalo)"/>
+        <path class="candle-flame" d="M${x} ${fl(y0 - 28)} C${fl(x + 9)} ${fl(y0 - 13)} ${fl(x + 9.5)} ${fl(y0 - 3)} ${x} ${fl(y0 + 5)} C${fl(x - 9.5)} ${fl(y0 - 3)} ${fl(x - 9)} ${fl(y0 - 13)} ${x} ${fl(y0 - 28)}Z" fill="url(#flameG)"/></g>
+        <text x="${x}" y="${fl(base)}" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-weight="500" font-size="${FS}" style="font-variant-numeric: lining-nums" fill="url(#foilText)" stroke="#a47b3f" stroke-width=".7">${d}</text>
       </g>`;
     }).join('')}</g>`;
-    s += `<use href="#ckBow" transform="translate(${CX} ${f1(topY + 25 * K + 1)}) scale(.95)"/>`;
+    s += `<use href="#ckBow" transform="translate(${CX} ${f1(topY + CR * K + 1)}) scale(1.05)"/>`;
     s += `</g>`;
 
     host.innerHTML = `
-    <svg viewBox="0 2 300 370" aria-hidden="true">
+    <svg viewBox="0 -40 300 412" aria-hidden="true">
       <defs>
         <linearGradient id="ckTier" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffbf8"/><stop offset=".45" stop-color="#fdf0ee"/><stop offset="1" stop-color="#f5cdd3"/></linearGradient>
         <linearGradient id="ckShade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9c5a62" stop-opacity=".26"/><stop offset=".2" stop-color="#9c5a62" stop-opacity="0"/><stop offset=".62" stop-color="#fff" stop-opacity=".12"/><stop offset=".8" stop-color="#9c5a62" stop-opacity="0"/><stop offset="1" stop-color="#9c5a62" stop-opacity=".28"/></linearGradient>
