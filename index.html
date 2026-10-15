@@ -250,36 +250,7 @@
       </svg>
       <p class="bday-cn"><span data-bind="herName"></span>，<span id="age-num">23</span> 岁生日快乐</p>
 
-      <button class="cake" id="cake" type="button" aria-label="吹灭蜡烛">
-        <svg viewBox="0 0 300 300" aria-hidden="true">
-          <defs>
-            <linearGradient id="tier" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stop-color="#efe7df"/><stop offset=".25" stop-color="#fffdfb"/><stop offset=".7" stop-color="#fbf6f1"/><stop offset="1" stop-color="#e6ddd3"/>
-            </linearGradient>
-            <radialGradient id="pearl" cx="35%" cy="35%" r="70%">
-              <stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#f3ece6"/><stop offset="1" stop-color="#d9cfc6"/>
-            </radialGradient>
-            <radialGradient id="flameG" cx="50%" cy="70%" r="60%">
-              <stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#fff1c2"/><stop offset=".75" stop-color="#ffb866"/><stop offset="1" stop-color="#ff9a5a" stop-opacity="0"/>
-            </radialGradient>
-            <radialGradient id="flameHalo"><stop offset="0" stop-color="#ffe7a8" stop-opacity=".7"/><stop offset="1" stop-color="#ffe7a8" stop-opacity="0"/></radialGradient>
-          </defs>
-          <ellipse cx="150" cy="268" rx="132" ry="18" fill="url(#pearl)" stroke="url(#goldLine)" stroke-width="1.2"/>
-          <!-- 下层 -->
-          <path d="M44 180 V252 Q150 280 256 252 V180 Z" fill="url(#tier)"/>
-          <ellipse cx="150" cy="180" rx="106" ry="18" fill="#fffdfb" stroke="#eee5da"/>
-          <path d="M44 236 Q150 262 256 236" fill="none" stroke="url(#goldLine)" stroke-width="1.4"/>
-          <path d="M44 196 Q60 214 78 198 Q96 218 114 200 Q132 220 150 201 Q168 220 186 200 Q204 218 222 198 Q240 214 256 196" fill="none" stroke="#f2b9c8" stroke-width="3" stroke-linecap="round"/>
-          <g class="pearls" fill="url(#pearl)"></g>
-          <!-- 上层 -->
-          <path d="M84 118 V172 Q150 190 216 172 V118 Z" fill="url(#tier)"/>
-          <ellipse cx="150" cy="118" rx="66" ry="12" fill="#fffdfb" stroke="#eee5da"/>
-          <path d="M84 160 Q150 178 216 160" fill="none" stroke="url(#goldLine)" stroke-width="1.2"/>
-          <g class="cake-flowers"></g>
-          <!-- 数字蜡烛 -->
-          <g class="candles" id="candles"></g>
-        </svg>
-      </button>
+      <button class="cake" id="cake" type="button" aria-label="许愿，吹灭蜡烛"></button>
       <p class="hint" id="cake-hint">闭上眼睛许个愿，然后轻触蜡烛</p>
     </div>
 
@@ -317,6 +288,7 @@
 <script src="js/audio.js"></script>
 <script src="js/glitter.js"></script>
 <script src="js/bouquet.js"></script>
+<script src="js/cake.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

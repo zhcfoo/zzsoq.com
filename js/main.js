@@ -72,32 +72,9 @@
   $('#love-lines').innerHTML = S.love.map((t) => `<li>${esc(t)}</li>`).join('');
   $('#letter-body').innerHTML = S.letter.map((t) => `<p>${esc(t)}</p>`).join('');
 
-  // 蛋糕：珍珠、小花、数字蜡烛
+  // 蛋糕：旋转木马八音盒
   const NS = 'http://www.w3.org/2000/svg';
-  let pearls = '';
-  for (let i = 0; i <= 18; i++) {
-    const x = 48 + i * 11.3, y = 236 + (1 - ((x - 150) / 106) ** 2) * 13;
-    pearls += `<circle cx="${x.toFixed(1)}" cy="${(y + 5).toFixed(1)}" r="3.3"/>`;
-  }
-  for (let i = 0; i <= 11; i++) {
-    const x = 88 + i * 11.3, y = 160 + (1 - ((x - 150) / 66) ** 2) * 9;
-    pearls += `<circle cx="${x.toFixed(1)}" cy="${(y + 4).toFixed(1)}" r="2.6"/>`;
-  }
-  $('.pearls').innerHTML = pearls;
-  $('.cake-flowers').innerHTML = [
-    ['#rose1', 206, 132, .5, 20], ['#rose0', 222, 146, .42, 80], ['#daisy', 192, 140, .5, 10], ['#bstar', 224, 126, .6, 0],
-    ['#rose2', 214, 158, .36, 40], ['#cham', 200, 158, .6, 0], ['#rose4', 96, 170, .36, 10], ['#cham', 108, 174, .55, 0], ['#rose0', 60, 214, .38, 60], ['#daisy', 74, 222, .42, 30],
-  ].map(([h, x, y, s, rot]) => `<use href="${h}" transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"/>`).join('');
-  const digits = String(age).split('');
-  $('#candles').innerHTML = digits.map((d, i) => {
-    const x = 150 + (i - (digits.length - 1) / 2) * 46, base = 116, y0 = base - 56; // 数字用等高数字，字高约 44
-    return `<g class="candle">
-      <path d="M${x} ${y0 + 2} V${y0 + 12}" stroke="#6b5040" stroke-width="1.4"/>
-      <g class="candle-fire" data-o="${x} ${y0 + 4}"><circle cx="${x}" cy="${y0 - 6}" r="18" fill="url(#flameHalo)"/>
-      <path class="candle-flame" data-o="${x} ${y0 + 4}" d="M${x} ${y0 - 22} C${x + 7} ${y0 - 10} ${x + 8} ${y0 - 2} ${x} ${y0 + 4} C${x - 8} ${y0 - 2} ${x - 7} ${y0 - 10} ${x} ${y0 - 22}Z" fill="url(#flameG)"/></g>
-      <text x="${x}" y="${base}" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-weight="500" font-size="70" style="font-variant-numeric: lining-nums" fill="url(#foilText)" stroke="#a47b3f" stroke-width=".6">${d}</text>
-    </g>`;
-  }).join('');
+  window.Carousel.build(age);
 
   // “Happy Birthday” 花体字按实际字形宽度适配画布
   function fitHB() {
@@ -476,7 +453,9 @@
     tl.to('.hb__text', { strokeDashoffset: 0, duration: 2.2, ease: 'power1.inOut' })
       .to('.hb__text', { fillOpacity: 1, strokeOpacity: .25, duration: .9 }, 1.6)
       .from(chars('.bday-cn'), { ...charIn, stagger: .05, duration: .5 }, 1.9)
-      .from('.cake', { autoAlpha: 0, y: 70, scale: .88, duration: 1, ease: 'power3.out' }, 2.3)
+      .from('.cake', { autoAlpha: 0, y: 70, scale: .9, duration: 1, ease: 'power3.out' }, 2.3)
+      .from('.ck-ride', { autoAlpha: 0, y: 24, duration: .8, ease: 'power2.out' }, 2.6)
+      .from('.ck-canopy', { y: -70, autoAlpha: 0, duration: 1, ease: 'bounce.out' }, 2.8)
       .to('.candle-fire', { autoAlpha: 1, y: 0, stagger: .2, duration: .5, ease: 'power2.out' }, 3.1)
       .from('#cake-hint', { autoAlpha: 0, y: 10, duration: .5 }, 3.4)
       .to({}, { duration: .6 });
@@ -500,8 +479,9 @@
       setTimeout(() => G.confetti(innerWidth * .15, innerHeight * .9, 120), 350);
       setTimeout(() => G.confetti(innerWidth * .85, innerHeight * .9, 120), 650);
       bgm.playBirthdaySong();
-      gsap.to('#cake-hint', { autoAlpha: 0, duration: .3, onComplete: () => { $('#cake-hint').textContent = '愿望，一定会实现。'; gsap.to('#cake-hint', { autoAlpha: 1, duration: .6 }); } });
-      setTimeout(() => lenis.scrollTo('#letter-zone', { duration: 2.6 }), 2600);
+      window.Carousel.play(11.5);
+      gsap.to('#cake-hint', { autoAlpha: 0, duration: .3, onComplete: () => { $('#cake-hint').textContent = '八音盒转起来了，愿望一定会实现。'; gsap.to('#cake-hint', { autoAlpha: 1, duration: .6 }); } });
+      setTimeout(() => lenis.scrollTo('#letter-zone', { duration: 3 }), 13000);
     });
     function smoke() {
       $$('.candle', cake).forEach((c) => {
