@@ -1,7 +1,7 @@
 /* 生日蛋糕：旋转木马八音盒（参照实物蛋糕重新设计）
  * 所有装饰都按透视贴在曲面上：底层蛋糕是圆柱，侧面的格纹、垂花、裙边沿弧面弯曲；
  * 穹顶是半椭球，珠串和贝壳纹顺着经纬线走。
- * 结构（自上而下）：皇冠顶 → 穹顶 + 扇贝檐口（珍珠、蝴蝶结、小灯） → 中柱 + 四匹独角兽 → 底层蛋糕 → 银色珍珠托盘。
+ * 结构（自上而下）：数字蜡烛（插在穹顶最高处）→ 穹顶 + 扇贝檐口（珍珠、蝴蝶结、小灯） → 中柱 + 四匹独角兽 → 底层蛋糕 → 银色珍珠托盘。
  * Carousel.build(age) 画出来；Carousel.play(秒) 让八音盒转起来，结束后慢慢停回待机速度。 */
 (function () {
   const f1 = (n) => Math.round(n * 10) / 10;
@@ -9,7 +9,7 @@
   const lerp = (a, b, t) => a + (b - a) * t;
   const CX = 150;
   const K = .22;                                   // 透视压扁比例（椭圆短轴 / 长轴）
-  const TIER = { top: 236, H: 66, rx: 118 };       // 底层蛋糕
+  const TIER = { top: 236, H: 84, rx: 118 };       // 底层蛋糕
   TIER.ry = TIER.rx * K;
   const DRUM = { rx: 40, top: 112 };               // 中柱
   const DOME = { y: 118, a: 92, b: 58 };           // 穹顶（半椭球）
@@ -185,29 +185,27 @@
         if (Math.cos(rad(ml)) > .2) s += `<circle class="ck-bulb" cx="${f1(bx)}" cy="${f1(by)}" r="1.7" fill="#fff4cf"/>`;
       }
     }
-    // 皇冠顶
-    const crownY = DOME.y - DOME.b + 1;
-    s += `<g transform="translate(${CX} ${crownY})">
-      <ellipse cx="0" cy="0" rx="14" ry="4.5" fill="url(#ckPearlBand)"/>
-      <path d="M-12 -2 L-13 -17 L-6.5 -11 L0 -22 L6.5 -11 L13 -17 L12 -2Z" fill="url(#ckDome)" stroke="#efd1cf" stroke-width=".8"/>
-      <circle cx="-13" cy="-18" r="2.4" fill="url(#ckPearl)"/><circle cx="0" cy="-23" r="2.9" fill="url(#ckPearl)"/><circle cx="13" cy="-18" r="2.4" fill="url(#ckPearl)"/>
-      <circle cx="0" cy="-9.5" r="3.1" fill="#f6c6d0" stroke="#fff" stroke-width=".8"/>
-      <path d="M-11 -4 Q0 -1 11 -4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-dasharray=".1 2.6"/>
-    </g></g>`;
-
-    /* ================= 数字蜡烛（底层蛋糕前沿）================= */
+    // 穹顶最高处：一圈珍珠托座，数字蜡烛插在上面
+    const topY = DOME.y - DOME.b + 2;
+    s += `<ellipse cx="${CX}" cy="${topY}" rx="25" ry="${f1(25 * K)}" fill="url(#ckPearlBand)"/>`;
+    for (let a = 0; a < 360; a += 20) {
+      const sn = Math.sin(rad(a));
+      s += `<circle cx="${f1(CX + 25 * Math.cos(rad(a)))}" cy="${f1(topY + 25 * K * sn)}" r="${f1(1.9 + 1 * (sn + 1) / 2)}" fill="url(#ckPearl)"/>`;
+    }
     s += `<g class="candles" id="candles">${digits.map((d, i) => {
-      const x = CX + (i - (digits.length - 1) / 2) * 128, base = top + 21, y0 = base - 40;
+      const x = CX + (i - (digits.length - 1) / 2) * 27, base = topY + 3, y0 = base - 37;
       return `<g class="candle">
         <path d="M${x} ${y0 + 2} V${y0 + 12}" stroke="#6b5040" stroke-width="1.2"/>
         <g class="candle-fire"><circle cx="${x}" cy="${y0 - 5}" r="15" fill="url(#flameHalo)"/>
         <path class="candle-flame" d="M${x} ${y0 - 18} C${x + 6} ${y0 - 8} ${x + 6.5} ${y0 - 2} ${x} ${y0 + 4} C${x - 6.5} ${y0 - 2} ${x - 6} ${y0 - 8} ${x} ${y0 - 18}Z" fill="url(#flameG)"/></g>
-        <text x="${x}" y="${base}" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-weight="500" font-size="46" style="font-variant-numeric: lining-nums" fill="url(#foilText)" stroke="#a47b3f" stroke-width=".5">${d}</text>
+        <text x="${x}" y="${base}" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-weight="500" font-size="42" style="font-variant-numeric: lining-nums" fill="url(#foilText)" stroke="#a47b3f" stroke-width=".5">${d}</text>
       </g>`;
     }).join('')}</g>`;
+    s += `<use href="#ckBow" transform="translate(${CX} ${f1(topY + 25 * K + 1)}) scale(.95)"/>`;
+    s += `</g>`;
 
     host.innerHTML = `
-    <svg viewBox="0 26 300 330" aria-hidden="true">
+    <svg viewBox="0 2 300 370" aria-hidden="true">
       <defs>
         <linearGradient id="ckTier" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffbf8"/><stop offset=".45" stop-color="#fdf0ee"/><stop offset="1" stop-color="#f5cdd3"/></linearGradient>
         <linearGradient id="ckShade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9c5a62" stop-opacity=".26"/><stop offset=".2" stop-color="#9c5a62" stop-opacity="0"/><stop offset=".62" stop-color="#fff" stop-opacity=".12"/><stop offset=".8" stop-color="#9c5a62" stop-opacity="0"/><stop offset="1" stop-color="#9c5a62" stop-opacity=".28"/></linearGradient>

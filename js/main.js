@@ -469,7 +469,7 @@
       gsap.to('.candle-fire', { autoAlpha: 0, y: -8, duration: .4, stagger: .1, ease: 'power2.in' });
       smoke();
       const r = cake.getBoundingClientRect();
-      const cx = r.left + r.width / 2, cy = r.top + r.height * .25;
+      const cx = r.left + r.width / 2, cy = r.top + r.height * .08;
       G.burst(cx, cy, 90, 6);
       G.confetti(cx, cy, 220);
       bgm.sfx('blow');
