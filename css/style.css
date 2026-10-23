@@ -260,6 +260,28 @@ body.is-muted .bars i { animation: none; transform: scaleY(.2); }
 .mcard--end::before, .mcard--end::after { display: none; }
 .mcard--end .script { display: block; font-size: calc(var(--cw) * .17); line-height: 1.2; }
 .mcard--end p { margin-top: 1em; letter-spacing: .4em; color: var(--ink-3); }
+.mcard time + p { margin-top: .75em; }
+
+/* 手绘插画（没有照片时） */
+.art { background: radial-gradient(130% 100% at 28% 12%, #fffdfa 0%, #fbf4ef 55%, #f4e9e3 100%); }
+.dd { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.dd .i { fill: none; stroke: #9a6a72; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.dd .thin { stroke-width: 1.3; }
+.dd .g { stroke: #c09654; }
+.dd .r { stroke: #d27a90; }
+.dd .b { stroke: #86a7c4; }
+.dd .gr { stroke: #84a882; }
+.dd .w { opacity: .8; }
+.dd .pp { opacity: 1; }
+.dd .f { fill: #9a6a72; }
+.dd .f.lt { fill: #d9bcbf; }
+.dd .s { fill: #d5b06b; }
+.dd .hi { fill: #fff; }
+.dd .t { fill: #c09654; font-family: var(--script); letter-spacing: 0; }
+.dd .t.en { font-family: var(--en); font-style: italic; }
+.dd .t.cn { font-family: var(--cn); fill: #9a6a72; letter-spacing: .1em; }
+.dd .t.ink { fill: #9a6a72; }
+.dd .t.r { fill: #d27a90; }
 
 /* V 争吵 */
 #storm .stage { justify-content: flex-start; }

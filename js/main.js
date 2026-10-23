@@ -17,6 +17,7 @@
   /* =========================================================
    * 数据
    * ========================================================= */
+  S.bdayCall = S.bdayCall || S.herName;
   $$('[data-bind]').forEach((el) => { el.textContent = S[el.dataset.bind] || ''; });
   const now = new Date();
   const birth = day(S.birthday);
@@ -46,11 +47,21 @@
     $$('#rail-dots i').forEach((dot) => dot.classList.toggle('on', Number(dot.dataset.year) <= y));
   }
 
+  // 照片（页面加载完再下载，首屏更快）/ 手绘插画 / 占位
+  const media = (cls, o, fallback) => {
+    if (o.photo) return `<div class="${cls}" data-bg="${esc(o.photo)}"></div>`;
+    if (o.art && window.Doodle && Doodle.has(o.art)) return `<div class="${cls} art">${Doodle.svg(o.art)}</div>`;
+    return `<div class="${cls} ph">${fallback}</div>`;
+  };
+  const loadPhotos = () => $$('[data-bg]').forEach((el) => { el.style.backgroundImage = `url('${el.dataset.bg}')`; el.removeAttribute('data-bg'); });
+  if (document.readyState === 'complete') setTimeout(loadPhotos, 300);
+  else addEventListener('load', () => setTimeout(loadPhotos, 300));
+
   // 成长拍立得
   const growth = S.growth.slice().sort((a, b) => a.year - b.year);
   $('#stack').innerHTML = growth.map((g, i) => `
     <figure class="pol" style="z-index:${i + 1}">
-      <div class="pol__img ${g.photo ? '' : 'ph'}" ${g.photo ? `style="background-image:url('${esc(g.photo)}')"` : ''}>${g.photo ? '' : `<span class="yr">${g.year}</span>`}</div>
+      ${media('pol__img', g, `<span class="yr">${g.year}</span>`)}
       <figcaption class="pol__cap"><b>${g.year}</b><span>${esc(g.text)}</span></figcaption>
     </figure>`).join('');
   $('#rail-dots').innerHTML = growth.map((g) =>
@@ -60,9 +71,9 @@
   // 回忆卡片
   $('#track').innerHTML = S.memories.map((m, i) => `
     <article class="mcard">
-      <div class="mcard__img ${m.photo ? '' : 'ph'}" ${m.photo ? `style="background-image:url('${esc(m.photo)}')"` : ''}>${m.photo ? '' : `<span>${['L', 'O', 'V', 'E', '♡'][i % 5]}</span>`}</div>
+      ${media('mcard__img', m, `<span>${['L', 'O', 'V', 'E', '♡'][i % 5]}</span>`)}
       <time>${esc(m.date)}</time>
-      <h3>${esc(m.title)}</h3>
+      ${m.title ? `<h3>${esc(m.title)}</h3>` : ''}
       <p>${esc(m.text)}</p>
     </article>`).join('') + `
     <article class="mcard mcard--end"><span class="script foil">to be continued</span><p>未完待续</p></article>`;
@@ -146,6 +157,15 @@
    * ========================================================= */
   const chars = (el) => SplitText.create(el, { type: 'chars', charsClass: 'char' }).chars;
   const charIn = { autoAlpha: 0, yPercent: 70, rotateX: -80, transformOrigin: '50% 100%' };
+  // 手绘插画：先晕染上色，再一笔一笔描线，最后点上星星和字
+  function drawIn(tl, el, at, len = 1) {
+    const svg = $('.dd', el);
+    if (!svg) return;
+    const ink = $$('.i', svg);
+    tl.from($$('.w', svg), { autoAlpha: 0, scale: .6, transformOrigin: '50% 50%', stagger: .03 * len, duration: .35 * len, ease: 'power2.out' }, at)
+      .from(ink, { drawSVG: 0, stagger: Math.min(.05, .45 / ink.length) * len, duration: .4 * len, ease: 'none' }, at + .1 * len)
+      .from($$('.f, .s, .t, .hi', svg), { autoAlpha: 0, scale: 0, transformOrigin: '50% 50%', stagger: .02 * len, duration: .25 * len, ease: 'back.out(2)' }, at + .55 * len);
+  }
   const pinTl = (stage, len, extra = {}) => gsap.timeline({
     defaults: { ease: 'power2.out' },
     scrollTrigger: { trigger: stage, start: 'top top', end: `+=${len}%`, pin: true, scrub: 1, anticipatePin: 1, invalidateOnRefresh: true, ...extra },
@@ -353,8 +373,9 @@
       .to('#rail-fill', { scaleX: 1, duration: 10, ease: 'none' }, 0);
     gsap.set(pols, { rotation: () => rand(-5, 5) });
     pols.forEach((p, i) => {
-      if (i === 0) return;
+      if (i === 0) return drawIn(tl, p, .05, .8);
       const at = Math.max(.2, ((growth[i].year - 2003) / span) * 10 - .7);
+      drawIn(tl, p, at + .4, .8);
       tl.from(p, { x: () => innerWidth * .75, y: 60, rotation: rand(14, 24), autoAlpha: 0, duration: .9, ease: 'power3.out' }, at);
       cue(tl, 'shutter', at);
       for (let k = 0; k < i; k++) tl.to(pols[k], { y: '-=9', scale: '-=.035', '--dim': ((i - k) * .035).toFixed(3), duration: .6 }, at + .2);
@@ -380,9 +401,10 @@
       scrollTrigger: { trigger: '.gallery', start: 'top top', end: () => `+=${dist() * 1.1}`, pin: true, scrub: 1, anticipatePin: 1, invalidateOnRefresh: true },
     });
     $$('.mcard', track).forEach((card) => {
-      gsap.timeline({ scrollTrigger: { containerAnimation: hTween, trigger: card, start: 'left right', end: 'right left', scrub: true } })
+      const tl = gsap.timeline({ scrollTrigger: { containerAnimation: hTween, trigger: card, start: 'left right', end: 'right left', scrub: true } })
         .fromTo(card, { rotation: 7, y: 46, scale: .88 }, { rotation: 0, y: 0, scale: 1, ease: 'sine.out', duration: 1 })
         .to(card, { rotation: -7, y: 46, scale: .88, ease: 'sine.in', duration: 1 });
+      drawIn(tl, card, .1, .75);
       const img = $('.mcard__img', card);
       ScrollTrigger.create({ containerAnimation: hTween, trigger: card, start: 'center 60%', onEnter: () => bgm.sfx('swish'), onEnterBack: () => bgm.sfx('swish', { v: .08 }) });
       if (img) gsap.fromTo(img, { '--shine': '-70%' }, { '--shine': '70%', ease: 'none', scrollTrigger: { containerAnimation: hTween, trigger: card, start: 'left right', end: 'right left', scrub: true } });
