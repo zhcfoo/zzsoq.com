@@ -157,14 +157,23 @@
    * ========================================================= */
   const chars = (el) => SplitText.create(el, { type: 'chars', charsClass: 'char' }).chars;
   const charIn = { autoAlpha: 0, yPercent: 70, rotateX: -80, transformOrigin: '50% 100%' };
-  // 手绘插画：先晕染上色，再一笔一笔描线，最后点上星星和字
-  function drawIn(tl, el, at, len = 1) {
+  // 手绘简笔画：先晕染上色，再一笔一笔描线，点上星星和字；画好后随着继续滑动，画里的东西还会动
+  function drawIn(tl, el, at, len = 1, life = 1) {
     const svg = $('.dd', el);
     if (!svg) return;
     const ink = $$('.i', svg);
     tl.from($$('.w', svg), { autoAlpha: 0, scale: .6, transformOrigin: '50% 50%', stagger: .03 * len, duration: .35 * len, ease: 'power2.out' }, at)
       .from(ink, { drawSVG: 0, stagger: Math.min(.05, .45 / ink.length) * len, duration: .4 * len, ease: 'none' }, at + .1 * len)
       .from($$('.f, .s, .t, .hi', svg), { autoAlpha: 0, scale: 0, transformOrigin: '50% 50%', stagger: .02 * len, duration: .25 * len, ease: 'back.out(2)' }, at + .55 * len);
+    const t0 = at + .85 * len;
+    const move = (sel, vars) => { const els = $$(sel, svg); if (els.length) tl.to(els, { ease: 'sine.inOut', duration: life, ...vars }, t0); };
+    move('.mv-up', { y: -16 });
+    move('.mv-down', { y: 14 });
+    move('.mv-drift', { x: 22, y: -4 });
+    move('.mv-spin', { rotation: 50, transformOrigin: '50% 50%' });
+    move('.mv-sway', { rotation: 9, transformOrigin: '50% 0%', yoyo: true, repeat: 3, duration: life / 4 });
+    move('.mv-bob', { y: -7, yoyo: true, repeat: 3, duration: life / 4 });
+    move('.s', { rotation: 90, scale: 1.35, transformOrigin: '50% 50%', yoyo: true, repeat: 1, duration: life / 2, stagger: { each: .04, from: 'random' } });
   }
   const pinTl = (stage, len, extra = {}) => gsap.timeline({
     defaults: { ease: 'power2.out' },
@@ -373,9 +382,10 @@
       .to('#rail-fill', { scaleX: 1, duration: 10, ease: 'none' }, 0);
     gsap.set(pols, { rotation: () => rand(-5, 5) });
     pols.forEach((p, i) => {
-      if (i === 0) return drawIn(tl, p, .05, .8);
+      const next = i + 1 < growth.length ? Math.max(.2, ((growth[i + 1].year - 2003) / span) * 10 - .7) : 10.6;
+      if (i === 0) return drawIn(tl, p, .05, .8, Math.max(.4, next - .75));
       const at = Math.max(.2, ((growth[i].year - 2003) / span) * 10 - .7);
-      drawIn(tl, p, at + .4, .8);
+      drawIn(tl, p, at + .4, .8, Math.max(.4, next - at - 1.1));
       tl.from(p, { x: () => innerWidth * .75, y: 60, rotation: rand(14, 24), autoAlpha: 0, duration: .9, ease: 'power3.out' }, at);
       cue(tl, 'shutter', at);
       for (let k = 0; k < i; k++) tl.to(pols[k], { y: '-=9', scale: '-=.035', '--dim': ((i - k) * .035).toFixed(3), duration: .6 }, at + .2);
@@ -404,7 +414,7 @@
       const tl = gsap.timeline({ scrollTrigger: { containerAnimation: hTween, trigger: card, start: 'left right', end: 'right left', scrub: true } })
         .fromTo(card, { rotation: 7, y: 46, scale: .88 }, { rotation: 0, y: 0, scale: 1, ease: 'sine.out', duration: 1 })
         .to(card, { rotation: -7, y: 46, scale: .88, ease: 'sine.in', duration: 1 });
-      drawIn(tl, card, .1, .75);
+      drawIn(tl, card, .1, .75, 1.2);
       const img = $('.mcard__img', card);
       ScrollTrigger.create({ containerAnimation: hTween, trigger: card, start: 'center 60%', onEnter: () => bgm.sfx('swish'), onEnterBack: () => bgm.sfx('swish', { v: .08 }) });
       if (img) gsap.fromTo(img, { '--shine': '-70%' }, { '--shine': '70%', ease: 'none', scrollTrigger: { containerAnimation: hTween, trigger: card, start: 'left right', end: 'right left', scrub: true } });
